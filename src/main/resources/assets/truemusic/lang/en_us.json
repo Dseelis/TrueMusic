@@ -1,0 +1,13 @@
+{
+  "itemGroup.truemusic": "Example Mod Tab",
+  "block.truemusic.example_block": "Example Block",
+  "item.truemusic.example_item": "Example Item",
+
+  "truemusic.configuration.title": "True Music Configs",
+  "truemusic.configuration.section.truemusic.common.toml": "True Music Configs",
+  "truemusic.configuration.section.truemusic.common.toml.title": "True Music Configs",
+  "truemusic.configuration.items": "Item List",
+  "truemusic.configuration.logDirtBlock": "Log Dirt Block",
+  "truemusic.configuration.magicNumberIntroduction": "Magic Number Text",
+  "truemusic.configuration.magicNumber": "Magic Number"
+}
