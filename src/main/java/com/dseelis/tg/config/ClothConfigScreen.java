@@ -28,7 +28,7 @@ public class ClothConfigScreen {
 
         audioCategory.addEntry(entryBuilder.startDoubleField(
                 Component.translatable("config.truemusic.audio.maxDistance"),
-                NeoForgeClientConfig.INSTANCE.maxAudioDistance.get()
+                TrueMusicClientConfig.getMaxAudioDistance()
             )
             .setDefaultValue(TrueMusicClientConfig.DEFAULT_MAX_AUDIO_DISTANCE)
             .setMin(16.0)
@@ -45,7 +45,7 @@ public class ClothConfigScreen {
 
         cacheCategory.addEntry(entryBuilder.startStrField(
                 Component.translatable("config.truemusic.cache.directory"),
-                NeoForgeClientConfig.INSTANCE.cacheDirectory.get()
+                TrueMusicClientConfig.getCacheDirectory()
             )
             .setDefaultValue(TrueMusicClientConfig.DEFAULT_CACHE_DIRECTORY)
             .setTooltip(Component.translatable("config.truemusic.cache.directory.tooltip"))
@@ -55,7 +55,7 @@ public class ClothConfigScreen {
 
         cacheCategory.addEntry(entryBuilder.startIntSlider(
                 Component.translatable("config.truemusic.cache.maxSizeMB"),
-                NeoForgeClientConfig.INSTANCE.maxCacheSizeMB.get(),
+                TrueMusicClientConfig.getMaxCacheSizeMB(),
                 0,
                 10240
             )
@@ -72,7 +72,7 @@ public class ClothConfigScreen {
 
         debugCategory.addEntry(entryBuilder.startBooleanToggle(
                 Component.translatable("config.truemusic.debug.enableLogging"),
-                NeoForgeClientConfig.INSTANCE.enableDebugLogging.get()
+                TrueMusicClientConfig.isDebugLoggingEnabled()
             )
             .setDefaultValue(TrueMusicClientConfig.DEFAULT_ENABLE_DEBUG_LOGGING)
             .setTooltip(Component.translatable("config.truemusic.debug.enableLogging.tooltip"))
@@ -87,7 +87,7 @@ public class ClothConfigScreen {
 
         transferCategory.addEntry(entryBuilder.startIntSlider(
                 Component.translatable("config.truemusic.transfer.chunkSize"),
-                NeoForgeServerConfig.INSTANCE.chunkSize.get(),
+                TrueMusicServerConfig.getChunkSize(),
                 64 * 1024,
                 1024 * 1024
             )
@@ -100,7 +100,7 @@ public class ClothConfigScreen {
 
         transferCategory.addEntry(entryBuilder.startIntSlider(
                 Component.translatable("config.truemusic.transfer.maxBytesPerTick"),
-                NeoForgeServerConfig.INSTANCE.maxBytesPerTick.get(),
+                TrueMusicServerConfig.getMaxBytesPerTick(),
                 64 * 1024,
                 4 * 1024 * 1024
             )
@@ -113,7 +113,7 @@ public class ClothConfigScreen {
 
         transferCategory.addEntry(entryBuilder.startIntSlider(
                 Component.translatable("config.truemusic.transfer.maxBytesPerPlayerPerTick"),
-                NeoForgeServerConfig.INSTANCE.maxBytesPerPlayerPerTick.get(),
+                TrueMusicServerConfig.getMaxBytesPerPlayerPerTick(),
                 64 * 1024,
                 2 * 1024 * 1024
             )
@@ -131,7 +131,7 @@ public class ClothConfigScreen {
 
         downloadCategory.addEntry(entryBuilder.startIntSlider(
                 Component.translatable("config.truemusic.download.connectTimeoutSeconds"),
-                NeoForgeServerConfig.INSTANCE.downloadConnectTimeoutSeconds.get(),
+                TrueMusicServerConfig.getDownloadConnectTimeoutSeconds(),
                 5,
                 120
             )
@@ -144,7 +144,7 @@ public class ClothConfigScreen {
 
         downloadCategory.addEntry(entryBuilder.startIntSlider(
                 Component.translatable("config.truemusic.download.readTimeoutSeconds"),
-                NeoForgeServerConfig.INSTANCE.downloadReadTimeoutSeconds.get(),
+                TrueMusicServerConfig.getDownloadReadTimeoutSeconds(),
                 30,
                 600
             )

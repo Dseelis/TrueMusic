@@ -14,18 +14,18 @@ public final class TrueMusicClientConfig {
     public static final boolean DEFAULT_ENABLE_DEBUG_LOGGING = false;
     public static final double DEFAULT_MAX_AUDIO_DISTANCE = 64.0;
 
-    private static Supplier<String> cacheDirectory = () -> DEFAULT_CACHE_DIRECTORY;
-    private static IntSupplier maxCacheSizeMB = () -> DEFAULT_MAX_CACHE_SIZE_MB;
-    private static DoubleSupplier maxAudioDistance = () -> DEFAULT_MAX_AUDIO_DISTANCE;
-    private static BooleanSupplier enableDebugLogging = () -> DEFAULT_ENABLE_DEBUG_LOGGING;
+    private static Supplier<String> cacheDirectorySupplier = () -> DEFAULT_CACHE_DIRECTORY;
+    private static IntSupplier maxCacheSizeMBSupplier = () -> DEFAULT_MAX_CACHE_SIZE_MB;
+    private static DoubleSupplier maxAudioDistanceSupplier = () -> DEFAULT_MAX_AUDIO_DISTANCE;
+    private static BooleanSupplier enableDebugLoggingSupplier = () -> DEFAULT_ENABLE_DEBUG_LOGGING;
 
-    public static String getCacheDirectory() { return cacheDirectory.get(); }
-    public static int getMaxCacheSizeMB() { return maxCacheSizeMB.getAsInt(); }
-    public static double getMaxAudioDistance() { return maxAudioDistance.getAsDouble(); }
-    public static boolean isDebugLoggingEnabled() { return enableDebugLogging.getAsBoolean(); }
+    public static String getCacheDirectory() { return cacheDirectorySupplier.get(); }
+    public static int getMaxCacheSizeMB() { return maxCacheSizeMBSupplier.getAsInt(); }
+    public static double getMaxAudioDistance() { return maxAudioDistanceSupplier.getAsDouble(); }
+    public static boolean isDebugLoggingEnabled() { return enableDebugLoggingSupplier.getAsBoolean(); }
 
-    public static void setCacheDirectory(Supplier<String> supplier) { cacheDirectory = supplier; }
-    public static void setMaxCacheSizeMB(IntSupplier supplier) { maxCacheSizeMB = supplier; }
-    public static void setMaxAudioDistance(DoubleSupplier supplier) { maxAudioDistance = supplier; }
-    public static void setEnableDebugLogging(BooleanSupplier supplier) { enableDebugLogging = supplier; }
+    public static void setCacheDirectory(Supplier<String> supplier) { cacheDirectorySupplier = supplier; }
+    public static void setMaxCacheSizeMB(IntSupplier supplier) { maxCacheSizeMBSupplier = supplier; }
+    public static void setMaxAudioDistance(DoubleSupplier supplier) { maxAudioDistanceSupplier = supplier; }
+    public static void setEnableDebugLogging(BooleanSupplier supplier) { enableDebugLoggingSupplier = supplier; }
 }
