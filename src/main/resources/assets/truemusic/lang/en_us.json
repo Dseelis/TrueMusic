@@ -1,13 +1,36 @@
 {
-  "itemGroup.truemusic": "Example Mod Tab",
-  "block.truemusic.example_block": "Example Block",
-  "item.truemusic.example_item": "Example Item",
+  "itemGroup.truemusic": "True Music",
+  "block.truemusic.speaker": "Speaker",
+  "item.truemusic.speaker": "Speaker",
 
-  "truemusic.configuration.title": "True Music Configs",
-  "truemusic.configuration.section.truemusic.common.toml": "True Music Configs",
-  "truemusic.configuration.section.truemusic.common.toml.title": "True Music Configs",
-  "truemusic.configuration.items": "Item List",
-  "truemusic.configuration.logDirtBlock": "Log Dirt Block",
-  "truemusic.configuration.magicNumberIntroduction": "Magic Number Text",
-  "truemusic.configuration.magicNumber": "Magic Number"
+  "config.truemusic.title": "True Music Configuration",
+
+  "config.truemusic.category.cache": "Cache Settings",
+  "config.truemusic.category.audio": "Audio Settings",
+  "config.truemusic.category.debug": "Debug Settings",
+  "config.truemusic.category.transfer": "Transfer Settings",
+  "config.truemusic.category.download": "Download Settings",
+
+  "config.truemusic.cache.directory": "Cache Directory",
+  "config.truemusic.cache.directory.tooltip": "Directory name for cached audio files (relative to game directory)",
+  "config.truemusic.cache.maxSizeMB": "Max Cache Size (MB)",
+  "config.truemusic.cache.maxSizeMB.tooltip": "Maximum cache size in megabytes. Set to 0 for unlimited (not recommended). Oldest files are deleted when limit is exceeded.",
+
+  "config.truemusic.audio.maxDistance": "Max Audio Distance",
+  "config.truemusic.audio.maxDistance.tooltip": "Maximum distance (in blocks) at which audio can be heard. Audio volume becomes 0 beyond this distance.",
+
+  "config.truemusic.debug.enableLogging": "Enable Debug Logging",
+  "config.truemusic.debug.enableLogging.tooltip": "Enable verbose debug logging for troubleshooting",
+
+  "config.truemusic.transfer.chunkSize": "Audio Chunk Size",
+  "config.truemusic.transfer.chunkSize.tooltip": "Audio chunk size in bytes. Larger = fewer packets, faster transfer.",
+  "config.truemusic.transfer.maxBytesPerTick": "Max Bytes Per Tick",
+  "config.truemusic.transfer.maxBytesPerTick.tooltip": "Max bytes/tick for all audio transfers combined. Increase if players experience slow downloads. Decrease if audio transfers affect game responsiveness.",
+  "config.truemusic.transfer.maxBytesPerPlayerPerTick": "Max Bytes Per Player Per Tick",
+  "config.truemusic.transfer.maxBytesPerPlayerPerTick.tooltip": "Max bytes/tick per player. Ensures fair bandwidth sharing.",
+
+  "config.truemusic.download.connectTimeoutSeconds": "Connection Timeout (seconds)",
+  "config.truemusic.download.connectTimeoutSeconds.tooltip": "Connection timeout when downloading audio from URLs",
+  "config.truemusic.download.readTimeoutSeconds": "Read Timeout (seconds)",
+  "config.truemusic.download.readTimeoutSeconds.tooltip": "Read timeout when downloading audio from URLs"
 }

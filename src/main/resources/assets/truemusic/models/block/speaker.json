@@ -1,0 +1,12 @@
+{
+    "parent": "minecraft:block/cube",
+    "textures": {
+        "down": "truemusic:block/speaker_down",
+        "up": "truemusic:block/speaker_up",
+        "north": "truemusic:block/speaker_north",
+        "south": "truemusic:block/speaker_south",
+        "east": "truemusic:block/speaker_east",
+        "west": "truemusic:block/speaker_west",
+        "particle": "truemusic:block/speaker_north"
+    }
+}

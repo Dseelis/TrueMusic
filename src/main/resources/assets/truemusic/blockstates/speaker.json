@@ -1,0 +1,12 @@
+{
+    "variants": {
+        "facing=north,playing=false": { "model": "truemusic:block/speaker" },
+        "facing=north,playing=true": { "model": "truemusic:block/speaker" },
+        "facing=south,playing=false": { "model": "truemusic:block/speaker", "y": 180 },
+        "facing=south,playing=true": { "model": "truemusic:block/speaker", "y": 180 },
+        "facing=east,playing=false": { "model": "truemusic:block/speaker", "y": 90 },
+        "facing=east,playing=true": { "model": "truemusic:block/speaker", "y": 90 },
+        "facing=west,playing=false": { "model": "truemusic:block/speaker", "y": 270 },
+        "facing=west,playing=true": { "model": "truemusic:block/speaker", "y": 270 }
+    }
+}

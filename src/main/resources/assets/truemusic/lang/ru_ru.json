@@ -1,0 +1,36 @@
+{
+  "itemGroup.truemusic": "True Music",
+  "block.truemusic.speaker": "Динамик",
+  "item.truemusic.speaker": "Динамик",
+
+  "config.truemusic.title": "Настройки True Music",
+
+  "config.truemusic.category.cache": "Настройки кэша",
+  "config.truemusic.category.audio": "Настройки звука",
+  "config.truemusic.category.debug": "Отладка",
+  "config.truemusic.category.transfer": "Настройки передачи",
+  "config.truemusic.category.download": "Настройки загрузки",
+
+  "config.truemusic.cache.directory": "Папка кэша",
+  "config.truemusic.cache.directory.tooltip": "Имя папки для кэшированных аудиофайлов (относительно папки игры)",
+  "config.truemusic.cache.maxSizeMB": "Макс. размер кэша (МБ)",
+  "config.truemusic.cache.maxSizeMB.tooltip": "Максимальный размер кэша в мегабайтах. 0 = без ограничений (не рекомендуется). Старые файлы удаляются при превышении лимита.",
+
+  "config.truemusic.audio.maxDistance": "Макс. дальность звука",
+  "config.truemusic.audio.maxDistance.tooltip": "Максимальное расстояние (в блоках), на котором слышен звук. За пределами этого расстояния громкость = 0.",
+
+  "config.truemusic.debug.enableLogging": "Включить отладочные логи",
+  "config.truemusic.debug.enableLogging.tooltip": "Включить подробное логирование для диагностики проблем",
+
+  "config.truemusic.transfer.chunkSize": "Размер аудио-чанка",
+  "config.truemusic.transfer.chunkSize.tooltip": "Размер чанка аудио в байтах. Больше = меньше пакетов, быстрее передача.",
+  "config.truemusic.transfer.maxBytesPerTick": "Макс. байт за тик",
+  "config.truemusic.transfer.maxBytesPerTick.tooltip": "Макс. байт/тик для всех передач аудио суммарно. Увеличьте, если игроки испытывают медленную загрузку. Уменьшите, если передача аудио влияет на отзывчивость игры.",
+  "config.truemusic.transfer.maxBytesPerPlayerPerTick": "Макс. байт на игрока за тик",
+  "config.truemusic.transfer.maxBytesPerPlayerPerTick.tooltip": "Макс. байт/тик на одного игрока. Обеспечивает справедливое распределение пропускной способности.",
+
+  "config.truemusic.download.connectTimeoutSeconds": "Таймаут подключения (сек)",
+  "config.truemusic.download.connectTimeoutSeconds.tooltip": "Таймаут подключения при загрузке аудио с URL",
+  "config.truemusic.download.readTimeoutSeconds": "Таймаут чтения (сек)",
+  "config.truemusic.download.readTimeoutSeconds.tooltip": "Таймаут чтения при загрузке аудио с URL"
+}
