@@ -2,9 +2,9 @@ package com.dseelis.tg.client.gui;
 
 import com.dseelis.tg.audio.*;
 import com.dseelis.tg.client.ClientAudioManager;
-import com.dseelis.tg.client.ClientSpeakerManager;
+import com.dseelis.tg.client.ClientPlayerMusicManager;
 import com.dseelis.tg.client.FolderManager;
-import com.dseelis.tg.menu.SpeakerMenu;
+import com.dseelis.tg.menu.PlayerMenu;
 import com.dseelis.tg.network.packets.*;
 import com.dseelis.tg.platform.PlatformHelper;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
+public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
 
     // Layout
     private static final int W        = 460;
@@ -47,16 +47,14 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     private Button prevButton;
     private Button nextButton;
     private Button playModeButton;
-    private Button folderFilterButton;
+    private Button broadcastButton;
     private Button newFolderButton;
     private Button backButton;
     private Button deleteFolderButton;
 
     @Nullable private AudioResource selectedTrack;
-    private float currentVolume;
-    @Nullable private UUID activeFilterFolderId;
 
-    public SpeakerScreen(SpeakerMenu menu, Inventory playerInv, Component title) {
+    public PlayerScreen(PlayerMenu menu, Inventory playerInv, Component title) {
         super(menu, playerInv, title);
         this.imageWidth  = W;
         this.imageHeight = H;
@@ -65,7 +63,6 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     @Override
     protected void init() {
         super.init();
-        currentVolume = ClientSpeakerManager.getInstance().getSpeakerVolume(menu.getSpeakerPos());
         FolderManager.getInstance().load();
         buildWidgets();
         refreshContent();
@@ -106,10 +103,8 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
 
         int listTop = ly + LIST_Y;
         int listH   = H - LIST_Y - PAD * 2 - BTN_H - GAP;
-        trackList = new TrackListWidget(
-            minecraft, LEFT_W, listH, listTop, ITEM_H,
-            this::onTrackSelected, this::onTrackDoubleClicked
-        );
+        trackList = new TrackListWidget(minecraft, LEFT_W, listH, listTop, ITEM_H,
+            this::onTrackSelected, this::onTrackDoubleClicked);
         trackList.setX(lx);
         addRenderableWidget(trackList);
 
@@ -124,13 +119,15 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         addRenderableWidget(progressSlider);
         ry += 22 + GAP;
 
-        volumeSlider = new VolumeSlider(rx, ry, rw, BTN_H, currentVolume,
-            this::onVolumeChanged, this::onVolumeCommit);
+        float vol = ClientPlayerMusicManager.getInstance().getVolume();
+        volumeSlider = new VolumeSlider(rx, ry, rw, BTN_H, vol,
+            v -> ClientPlayerMusicManager.getInstance().updateVolume(v),
+            this::onVolumeCommit);
         addRenderableWidget(volumeSlider);
         ry += BTN_H + GAP + 2;
 
         int half = (rw - GAP) / 2;
-        PlaybackState state = getCurrentState();
+        PlaybackState state = ClientPlayerMusicManager.getInstance().getState();
 
         playPauseButton = Button.builder(Component.literal(playLabel(state)), b -> togglePlayPause())
             .bounds(rx, ry, half, BTN_H).build();
@@ -141,24 +138,25 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         addRenderableWidget(stopButton);
         ry += BTN_H + GAP;
 
-        prevButton = Button.builder(Component.literal("⏮ Prev"), b -> skipTrack(false))
+        prevButton = Button.builder(Component.literal("⏮ Prev"), b -> skip(false))
             .bounds(rx, ry, half, BTN_H).build();
         addRenderableWidget(prevButton);
 
-        nextButton = Button.builder(Component.literal("Next ⏭"), b -> skipTrack(true))
+        nextButton = Button.builder(Component.literal("Next ⏭"), b -> skip(true))
             .bounds(rx + half + GAP, ry, half, BTN_H).build();
         addRenderableWidget(nextButton);
         ry += BTN_H + GAP;
 
-        PlayMode mode = ClientSpeakerManager.getInstance().getSpeakerPlayMode(menu.getSpeakerPos());
-        playModeButton = Button.builder(Component.literal(modeLabel(mode)), b -> togglePlayMode())
+        PlayMode mode = ClientPlayerMusicManager.getInstance().getPlayMode();
+        playModeButton = Button.builder(Component.literal(modeLabel(mode)), b -> toggleMode())
             .bounds(rx, ry, rw, BTN_H).build();
         addRenderableWidget(playModeButton);
         ry += BTN_H + GAP;
 
-        folderFilterButton = Button.builder(Component.literal(filterLabel()), b -> toggleFolderFilter())
+        boolean bc = ClientPlayerMusicManager.getInstance().isBroadcasting();
+        broadcastButton = Button.builder(Component.literal(broadcastLabel(bc)), b -> toggleBroadcast())
             .bounds(rx, ry, rw, BTN_H).build();
-        addRenderableWidget(folderFilterButton);
+        addRenderableWidget(broadcastButton);
     }
 
     // ---- Navigation ----
@@ -169,7 +167,7 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         refreshContent();
     }
 
-    private void updateWidgetVisibility() {
+    private void updateVisibility() {
         boolean isAll          = activeTab == Tab.ALL_TRACKS;
         boolean isFolderList   = activeTab == Tab.FOLDERS && openFolderId == null;
         boolean isFolderInside = activeTab == Tab.FOLDERS && openFolderId != null;
@@ -181,7 +179,7 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     }
 
     private void refreshContent() {
-        updateWidgetVisibility();
+        updateVisibility();
 
         if (activeTab == Tab.ALL_TRACKS) {
             String q = searchBox != null ? searchBox.getValue() : "";
@@ -221,14 +219,11 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     }
 
     private void deleteOpenFolder() {
-        if (openFolderId == null) return;
-        if (openFolderId.equals(activeFilterFolderId)) {
-            activeFilterFolderId = null;
-            sendPlaylistPacket(null);
+        if (openFolderId != null) {
+            FolderManager.getInstance().removeFolder(openFolderId);
+            openFolderId = null;
+            refreshContent();
         }
-        FolderManager.getInstance().removeFolder(openFolderId);
-        openFolderId = null;
-        refreshContent();
     }
 
     private void removeTrackFromOpenFolder(AudioResource track) {
@@ -239,95 +234,57 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
 
     // ---- Playback ----
 
-    private void onTrackSelected(AudioResource track)     { selectedTrack = track; playPauseButton.active = true; }
-    private void onTrackDoubleClicked(AudioResource track) { selectedTrack = track; playTrack(track); }
+    private void onTrackSelected(AudioResource t)      { selectedTrack = t; playPauseButton.active = true; }
+    private void onTrackDoubleClicked(AudioResource t)  { selectedTrack = t; playTrack(t); }
 
     private void togglePlayPause() {
-        PlaybackState state = getCurrentState();
-        if (state.isPlaying()) {
-            PlatformHelper.INSTANCE.sendToServer(
-                new SpeakerControlPacket(menu.getSpeakerPos(), SpeakerControlPacket.Action.PAUSE, state.resourceId()));
-        } else if (state.isPaused()) {
-            PlatformHelper.INSTANCE.sendToServer(
-                new SpeakerControlPacket(menu.getSpeakerPos(), SpeakerControlPacket.Action.PLAY, state.resourceId()));
+        PlaybackState s = ClientPlayerMusicManager.getInstance().getState();
+        if (s.isPlaying()) {
+            PlatformHelper.INSTANCE.sendToServer(new PlayerControlPacket(PlayerControlPacket.Action.PAUSE, s.resourceId()));
+        } else if (s.isPaused()) {
+            PlatformHelper.INSTANCE.sendToServer(new PlayerControlPacket(PlayerControlPacket.Action.PLAY, s.resourceId()));
         } else if (selectedTrack != null) {
             playTrack(selectedTrack);
         }
     }
 
-    private void playTrack(AudioResource track) {
-        PlatformHelper.INSTANCE.sendToServer(
-            new SpeakerControlPacket(menu.getSpeakerPos(), SpeakerControlPacket.Action.PLAY, track.id()));
+    private void playTrack(AudioResource t) {
+        PlatformHelper.INSTANCE.sendToServer(new PlayerControlPacket(PlayerControlPacket.Action.PLAY, t.id()));
     }
 
     private void stopPlayback() {
-        PlatformHelper.INSTANCE.sendToServer(
-            new SpeakerControlPacket(menu.getSpeakerPos(), SpeakerControlPacket.Action.STOP, null));
+        PlatformHelper.INSTANCE.sendToServer(new PlayerControlPacket(PlayerControlPacket.Action.STOP, null));
     }
 
-    private void skipTrack(boolean forward) {
-        PlatformHelper.INSTANCE.sendToServer(new SpeakerSkipPacket(menu.getSpeakerPos(), forward));
+    private void skip(boolean forward) {
+        PlatformHelper.INSTANCE.sendToServer(new com.dseelis.tg.network.packets.PlayerSkipPacket(forward));
     }
 
-    private void togglePlayMode() {
-        PlayMode cur  = ClientSpeakerManager.getInstance().getSpeakerPlayMode(menu.getSpeakerPos());
+    private void toggleMode() {
+        PlayMode cur  = ClientPlayerMusicManager.getInstance().getPlayMode();
         PlayMode next = cur.next();
-        ClientSpeakerManager.getInstance().updateSpeaker(menu.getSpeakerPos(), getCurrentState(), currentVolume, next);
+        ClientPlayerMusicManager.getInstance().setPlayMode(next);
         playModeButton.setMessage(Component.literal(modeLabel(next)));
-        PlatformHelper.INSTANCE.sendToServer(new SpeakerPlayModePacket(menu.getSpeakerPos(), next));
+        PlatformHelper.INSTANCE.sendToServer(new PlayerPlayModePacket(next));
     }
 
-    private void toggleFolderFilter() {
-        if (activeFilterFolderId != null) {
-            activeFilterFolderId = null;
-            sendPlaylistPacket(null);
-        } else {
-            if (openFolderId != null && activeTab == Tab.FOLDERS) {
-                activeFilterFolderId = openFolderId;
-                ensureServerPlaylistForFolder(activeFilterFolderId);
-            } else {
-                folderFilterButton.setMessage(Component.literal("Open a folder first"));
-                return;
-            }
-        }
-        folderFilterButton.setMessage(Component.literal(filterLabel()));
+    private void toggleBroadcast() {
+        boolean cur  = ClientPlayerMusicManager.getInstance().isBroadcasting();
+        boolean next = !cur;
+        ClientPlayerMusicManager.getInstance().setBroadcasting(next);
+        broadcastButton.setMessage(Component.literal(broadcastLabel(next)));
+        PlatformHelper.INSTANCE.sendToServer(new PlayerBroadcastPacket(next));
     }
 
-    private void ensureServerPlaylistForFolder(UUID folderId) {
-        FolderManager.getInstance().getFolder(folderId).ifPresent(folder -> {
-            String name = "folder:" + folder.getName();
-            PlaylistManager mgr = PlaylistManager.getInstance();
-            Playlist pl = mgr.getAllPlaylists().stream()
-                .filter(p -> p.getName().equals(name)).findFirst()
-                .orElseGet(() -> mgr.createPlaylistFromNames(name,
-                    FolderManager.getInstance().getTracksInFolder(folderId)
-                        .stream().map(AudioResource::name).toList()));
-            sendPlaylistPacket(pl.getId());
-        });
-    }
-
-    private void sendPlaylistPacket(@Nullable UUID id) {
-        PlatformHelper.INSTANCE.sendToServer(new SpeakerSetPlaylistPacket(menu.getSpeakerPos(), id));
-    }
-
-    // ---- Volume / seek ----
-
-    private void onVolumeChanged(float v) {
-        currentVolume = v;
-        ClientSpeakerManager.getInstance().updateVolume(menu.getSpeakerPos(), v);
-    }
-
-    private void onVolumeCommit() {
-        PlatformHelper.INSTANCE.sendToServer(new SpeakerVolumePacket(menu.getSpeakerPos(), currentVolume));
-    }
+    private void onVolumeCommit() { /* headphones-only, no server packet */ }
 
     private void onSeek(float progress) {
-        PlaybackState state = getCurrentState();
-        if (state.isStopped()) return;
-        ClientAudioManager.getInstance().getResource(state.resourceId()).ifPresent(res -> {
+        PlaybackState s = ClientPlayerMusicManager.getInstance().getState();
+        if (s.isStopped()) return;
+        ClientAudioManager.getInstance().getResource(s.resourceId()).ifPresent(res -> {
             if (res.durationMs() <= 0) return;
             long ms = (long) (progress * res.durationMs());
-            PlatformHelper.INSTANCE.sendToServer(new SpeakerSeekPacket(menu.getSpeakerPos(), ms));
+            PlatformHelper.INSTANCE.sendToServer(new PlayerSeekPacket(ms));
         });
     }
 
@@ -336,27 +293,25 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     @Override
     protected void containerTick() {
         super.containerTick();
-        PlaybackState state = getCurrentState();
+        PlaybackState s = ClientPlayerMusicManager.getInstance().getState();
 
-        if (!state.isStopped()) {
-            long dur = ClientAudioManager.getInstance().getResource(state.resourceId())
+        if (!s.isStopped()) {
+            long dur = ClientAudioManager.getInstance().getResource(s.resourceId())
                 .map(AudioResource::durationMs).orElse(-1L);
-            progressSlider.update(state.getCurrentPositionMs(System.currentTimeMillis()), dur);
+            progressSlider.update(s.getCurrentPositionMs(System.currentTimeMillis()), dur);
         } else {
             progressSlider.update(0, -1);
         }
 
-        playPauseButton.setMessage(Component.literal(playLabel(state)));
-        playPauseButton.active = state.isPlaying() || state.isPaused() || selectedTrack != null;
-        stopButton.active      = !state.isStopped();
+        playPauseButton.setMessage(Component.literal(playLabel(s)));
+        playPauseButton.active = s.isPlaying() || s.isPaused() || selectedTrack != null;
+        stopButton.active      = !s.isStopped();
 
-        PlayMode mode = ClientSpeakerManager.getInstance().getSpeakerPlayMode(menu.getSpeakerPos());
-        boolean hasPlaylist = mode != PlayMode.SINGLE || activeFilterFolderId != null;
-        prevButton.active = hasPlaylist && !state.isStopped();
-        nextButton.active = hasPlaylist && !state.isStopped();
-
+        PlayMode mode = ClientPlayerMusicManager.getInstance().getPlayMode();
         playModeButton.setMessage(Component.literal(modeLabel(mode)));
-        folderFilterButton.setMessage(Component.literal(filterLabel()));
+
+        boolean bc = ClientPlayerMusicManager.getInstance().isBroadcasting();
+        broadcastButton.setMessage(Component.literal(broadcastLabel(bc)));
     }
 
     // ---- Rendering ----
@@ -399,7 +354,7 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     private String getLeftHeader() {
         if (activeTab == Tab.ALL_TRACKS) {
             int total = ClientAudioManager.getInstance().getAllResources().size();
-            return "All Tracks (" + total + ")  [RMB = add to folder]";
+            return "All Tracks (" + total + ")";
         } else if (openFolderId != null) {
             return FolderManager.getInstance().getFolder(openFolderId)
                 .map(f -> f.getName() + " (" + f.size() + " tracks)").orElse("Folder");
@@ -409,35 +364,27 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     }
 
     private void renderRightPanel(GuiGraphics g, int x, int y) {
-        g.drawString(font, "Now Playing", x, y, 0xFFFFFF);
+        boolean bc = ClientPlayerMusicManager.getInstance().isBroadcasting();
+        g.drawString(font, bc ? "Broadcasting" : "Now Playing", x, y, bc ? 0xFF8855 : 0xFFFFFF);
         y += 12;
 
-        PlaybackState state = getCurrentState();
+        PlaybackState s = ClientPlayerMusicManager.getInstance().getState();
         int rw = W - LEFT_W - PAD * 3;
 
-        if (state.isStopped()) {
+        if (s.isStopped()) {
             g.drawString(font, "Nothing playing", x, y, 0x555555);
         } else {
-            String name = ClientAudioManager.getInstance().getResource(state.resourceId())
+            String name = ClientAudioManager.getInstance().getResource(s.resourceId())
                 .map(AudioResource::name).orElse("Unknown");
             if (font.width(name) > rw) name = font.plainSubstrByWidth(name, rw - 8) + "...";
-            int col = state.isPlaying() ? 0x55FF55 : 0xFFFF55;
+            int col = s.isPlaying() ? (bc ? 0xFF8855 : 0x55FF55) : 0xFFFF55;
             g.drawString(font, name, x, y, col);
-            if (state.isPaused()) g.drawString(font, "(Paused)", x, y + 10, 0x888888);
-        }
-
-        if (activeFilterFolderId != null) {
-            String fname = FolderManager.getInstance().getFolder(activeFilterFolderId)
-                .map(TrackFolder::getName).orElse("?");
-            String label = "[" + fname + "]";
-            g.drawString(font, label, x + rw - font.width(label), topPos + H - PAD - BTN_H - 6, 0x55AAFF);
+            if (s.isPaused()) g.drawString(font, "(Paused)", x, y + 10, 0x888888);
         }
     }
 
     @Override
     protected void renderLabels(GuiGraphics g, int mx, int my) {}
-
-    // ---- Input ----
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
@@ -472,22 +419,7 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
 
     // ---- Helpers ----
 
-    private PlaybackState getCurrentState() {
-        return ClientSpeakerManager.getInstance()
-            .getSpeakerState(menu.getSpeakerPos())
-            .orElse(PlaybackState.STOPPED);
-    }
-
-    private String playLabel(PlaybackState s) { return s.isPlaying() ? "Pause" : "Play"; }
-
+    private String playLabel(PlaybackState s)  { return s.isPlaying() ? "Pause" : "Play"; }
     private String modeLabel(PlayMode m) { return "Mode: " + m.getDisplayName(); }
-
-    private String filterLabel() {
-        if (activeFilterFolderId != null) {
-            String name = FolderManager.getInstance().getFolder(activeFilterFolderId)
-                .map(TrackFolder::getName).orElse("?");
-            return "Folder: " + name + " [clear]";
-        }
-        return "Play from open folder";
-    }
+    private String broadcastLabel(boolean on)  { return on ? "Broadcast: ON" : "Broadcast: OFF"; }
 }

@@ -89,5 +89,48 @@ public class TrueMusicNetwork {
             SpeakerSkipPacket.STREAM_CODEC,
             SpeakerSkipPacket::handle
         );
+
+        registrar.playToServer(
+            SpeakerSetPlaylistPacket.TYPE,
+            SpeakerSetPlaylistPacket.CODEC,
+            SpeakerSetPlaylistPacket::handle
+        );
+
+        // Music Player item packets
+        registrar.playToClient(
+            SyncPlayerStatePacket.TYPE,
+            SyncPlayerStatePacket.CODEC,
+            SyncPlayerStatePacket::handle
+        );
+
+        registrar.playToServer(
+            PlayerControlPacket.TYPE,
+            PlayerControlPacket.CODEC,
+            PlayerControlPacket::handle
+        );
+
+        registrar.playToServer(
+            PlayerPlayModePacket.TYPE,
+            PlayerPlayModePacket.CODEC,
+            PlayerPlayModePacket::handle
+        );
+
+        registrar.playToServer(
+            PlayerBroadcastPacket.TYPE,
+            PlayerBroadcastPacket.CODEC,
+            PlayerBroadcastPacket::handle
+        );
+
+        registrar.playToServer(
+            PlayerSeekPacket.TYPE,
+            PlayerSeekPacket.CODEC,
+            PlayerSeekPacket::handle
+        );
+
+        registrar.playToServer(
+            PlayerSkipPacket.TYPE,
+            PlayerSkipPacket.CODEC,
+            PlayerSkipPacket::handle
+        );
     }
 }

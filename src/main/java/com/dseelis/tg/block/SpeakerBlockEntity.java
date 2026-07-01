@@ -85,83 +85,109 @@ public class SpeakerBlockEntity extends BlockEntity {
         return PlaylistManager.getInstance().getPlaylist(playlistId);
     }
 
+    // guard: UUID of the track for which we already called advanceToNextTrack
+    private UUID lastAdvancedResourceId = null;
+
     public void checkAndAdvanceTrack(long currentTimeMs) {
         if (level == null || level.isClientSide) return;
         if (!playback.isPlaying()) return;
 
-        // Get current track duration
         UUID currentResourceId = playback.resourceId();
         if (currentResourceId == null) return;
+
+        if (!currentResourceId.equals(lastAdvancedResourceId)) {
+            lastAdvancedResourceId = null;
+        }
 
         long durationMs = ServerSpeakerManager.getDurationMs(currentResourceId);
         if (durationMs <= 0) return;
 
         long currentPos = playback.getCurrentPositionMs(currentTimeMs);
 
-        // Check if track finished (with 100ms tolerance)
-        if (currentPos >= durationMs - 100) {
+        if (currentPos >= durationMs - 100 && lastAdvancedResourceId == null) {
+            lastAdvancedResourceId = currentResourceId;
             advanceToNextTrack(currentTimeMs);
         }
     }
 
     private void advanceToNextTrack(long currentTimeMs) {
-        Optional<Playlist> playlistOpt = getPlaylist();
+        // Ensure we have a valid playlist — playlistId may point to a stale
+        // in-memory entry (e.g. after server restart). Recreate if missing.
+        if (playlistId != null && PlaylistManager.getInstance().getPlaylist(playlistId).isEmpty()) {
+            playlistId = null;
+        }
 
-        if (playlistOpt.isEmpty()) {
-            // No playlist, handle simple modes
-            if (playMode == PlayMode.LOOP) {
-                // Restart current track
-                playback = new PlaybackState(playback.resourceId(), currentTimeMs, 0, 1.0f);
-                setChanged();
-                syncToClients();
-            } else {
-                // Stop playback
-                setPlayback(PlaybackState.STOPPED);
-            }
+        if (playlistId == null) {
+            Playlist allTracks = PlaylistManager.getInstance().getOrCreatePlaylistFromAllResources("All Tracks");
+            if (playback.resourceId() != null) allTracks.seekToTrack(playback.resourceId());
+            playlistId = allTracks.getId();
+            setChanged();
+        }
+
+        Playlist playlist = getPlaylist().orElse(null);
+        if (playlist == null) {
+            setPlayback(PlaybackState.STOPPED);
             return;
         }
 
-        Playlist playlist = playlistOpt.get();
-        Optional<UUID> nextTrackId = playlist.getNextTrack(playMode);
-
-        if (nextTrackId.isPresent()) {
-            // Start next track
-            playback = new PlaybackState(nextTrackId.get(), currentTimeMs, 0, 1.0f);
+        Optional<UUID> next = playlist.getNextTrack(playMode);
+        if (next.isPresent()) {
+            lastAdvancedResourceId = null;
+            playback = new PlaybackState(next.get(), currentTimeMs, 0, 1.0f);
             setChanged();
             syncToClients();
         } else {
-            // End of playlist
             setPlayback(PlaybackState.STOPPED);
         }
     }
 
-
     public void skipToNext() {
         if (level == null || level.isClientSide) return;
-        advanceToNextTrack(System.currentTimeMillis());
+        if (playlistId == null) {
+            Playlist allTracks = PlaylistManager.getInstance().getOrCreatePlaylistFromAllResources("All Tracks");
+            if (playback.resourceId() != null) allTracks.seekToTrack(playback.resourceId());
+            playlistId = allTracks.getId();
+            setChanged();
+        }
+        getPlaylist().ifPresent(playlist -> {
+            // Always advance sequentially on manual skip, regardless of playMode
+            Optional<UUID> next = playlist.getNextTrack(PlayMode.SEQUENTIAL);
+            if (next.isPresent()) {
+                long now = System.currentTimeMillis();
+                lastAdvancedResourceId = null;
+                playback = new PlaybackState(next.get(), now, 0, 1.0f);
+                setChanged();
+                syncToClients();
+            }
+        });
     }
-
 
     public void skipToPrevious() {
         if (level == null || level.isClientSide) return;
-
-        Optional<Playlist> playlistOpt = getPlaylist();
-        if (playlistOpt.isEmpty()) return;
-
-        Playlist playlist = playlistOpt.get();
-        Optional<UUID> prevTrackId = playlist.getPreviousTrack();
-
-        if (prevTrackId.isPresent()) {
-            long currentTimeMs = System.currentTimeMillis();
-            playback = new PlaybackState(prevTrackId.get(), currentTimeMs, 0, 1.0f);
+        if (playlistId == null) {
+            Playlist allTracks = PlaylistManager.getInstance().getOrCreatePlaylistFromAllResources("All Tracks");
+            if (playback.resourceId() != null) allTracks.seekToTrack(playback.resourceId());
+            playlistId = allTracks.getId();
             setChanged();
-            syncToClients();
         }
+        getPlaylist().ifPresent(playlist -> {
+            Optional<UUID> prev = playlist.getPreviousTrack();
+            if (prev.isPresent()) {
+                long now = System.currentTimeMillis();
+                lastAdvancedResourceId = null;
+                playback = new PlaybackState(prev.get(), now, 0, 1.0f);
+                setChanged();
+                syncToClients();
+            }
+        });
     }
 
     private void syncToClients() {
-        if (level != null && !level.isClientSide) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        if (level == null || level.isClientSide) return;
+        // Use ServerSpeakerManager callback so clients get a proper SyncSpeakerStatePacket
+        // with the correct serverTimeMs anchor, not stale NBT data.
+        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            ServerSpeakerManager.getInstance().fireSyncCallback(serverLevel, worldPosition, this);
         }
     }
 

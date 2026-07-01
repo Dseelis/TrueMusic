@@ -99,9 +99,7 @@ public class Playlist {
         return Optional.empty();
     }
 
-    /**
-     * Get the next track based on the play mode.
-     */
+    // Get the next track based on the play mode.
     public Optional<UUID> getNextTrack(PlayMode mode) {
         if (trackIds.isEmpty()) {
             return Optional.empty();
@@ -111,30 +109,25 @@ public class Playlist {
             case SINGLE -> Optional.empty(); // Don't advance
             case LOOP -> getCurrentTrack(); // Repeat current
             case SEQUENTIAL -> {
-                if (currentIndex + 1 < trackIds.size()) {
-                    currentIndex++;
-                    yield Optional.of(trackIds.get(currentIndex));
-                }
-                yield Optional.empty(); // End of playlist
+                // Wrap around to first track after last
+                currentIndex = (currentIndex + 1) % trackIds.size();
+                yield Optional.of(trackIds.get(currentIndex));
             }
             case SHUFFLE -> {
                 if (trackIds.size() == 1) {
                     yield Optional.of(trackIds.get(0));
                 }
-                // Pick a random track different from current
                 int nextIndex;
                 do {
                     nextIndex = random.nextInt(trackIds.size());
-                } while (nextIndex == currentIndex && trackIds.size() > 1);
+                } while (nextIndex == currentIndex);
                 currentIndex = nextIndex;
                 yield Optional.of(trackIds.get(currentIndex));
             }
         };
     }
 
-    /**
-     * Get the previous track.
-     */
+    // Get the previous track.
     public Optional<UUID> getPreviousTrack() {
         if (trackIds.isEmpty()) {
             return Optional.empty();
@@ -146,9 +139,7 @@ public class Playlist {
         return Optional.empty();
     }
 
-    /**
-     * Move to a specific track by its UUID.
-     */
+    // Move to a specific track by its UUID.
     public boolean seekToTrack(UUID trackId) {
         int index = trackIds.indexOf(trackId);
         if (index >= 0) {
@@ -158,9 +149,7 @@ public class Playlist {
         return false;
     }
 
-    /**
-     * Shuffle the playlist order.
-     */
+    // Shuffle the playlist order.
     public void shuffle() {
         if (trackIds.isEmpty()) return;
 

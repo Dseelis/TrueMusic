@@ -64,7 +64,13 @@ public class SpeakerSoundInstance extends AbstractTickableSoundInstance {
 
     private static final float MIN_INITIAL_VOLUME = 0.0001f;
 
+    private final boolean headphonesMode;
+
     public SpeakerSoundInstance(AudioStream stream, BlockPos pos, float volume) {
+        this(stream, pos, volume, false);
+    }
+
+    public SpeakerSoundInstance(AudioStream stream, BlockPos pos, float volume, boolean headphonesMode) {
         super(
             SoundEvent.createVariableRangeEvent(DUMMY_SOUND_LOCATION),
             SoundSource.BLOCKS,
@@ -74,6 +80,7 @@ public class SpeakerSoundInstance extends AbstractTickableSoundInstance {
         this.stream = stream;
         this.sourcePos = pos;
         this.baseVolume = volume;
+        this.headphonesMode = headphonesMode;
 
         this.x = pos.getX() + 0.5;
         this.y = pos.getY() + 0.5;
@@ -110,7 +117,7 @@ public class SpeakerSoundInstance extends AbstractTickableSoundInstance {
             return;
         }
 
-        if (!(level.getBlockEntity(sourcePos) instanceof SpeakerBlockEntity)) {
+        if (!headphonesMode && !(level.getBlockEntity(sourcePos) instanceof SpeakerBlockEntity)) {
             super.stop();
             return;
         }
@@ -121,7 +128,15 @@ public class SpeakerSoundInstance extends AbstractTickableSoundInstance {
             return;
         }
 
-        updateAcoustics(level, player.getEyePosition());
+        if (headphonesMode) {
+            // Follow the player — full volume, no distance attenuation
+            this.x = player.getX();
+            this.y = player.getY();
+            this.z = player.getZ();
+            this.volume = baseVolume;
+        } else {
+            updateAcoustics(level, player.getEyePosition());
+        }
     }
 
     private void updateAcoustics(Level level, Vec3 listenerPos) {

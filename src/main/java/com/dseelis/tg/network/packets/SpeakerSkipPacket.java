@@ -1,12 +1,14 @@
 package com.dseelis.tg.network.packets;
 
 import com.dseelis.tg.block.SpeakerBlockEntity;
+import com.dseelis.tg.server.ServerSpeakerManager;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -40,6 +42,19 @@ public record SpeakerSkipPacket(BlockPos pos, boolean forward) implements Custom
                 speaker.skipToNext();
             } else {
                 speaker.skipToPrevious();
+            }
+
+            // Sync new state via ServerSpeakerManager so clients get proper SyncSpeakerStatePacket
+            if (player.level() instanceof ServerLevel serverLevel) {
+                ServerSpeakerManager mgr = ServerSpeakerManager.getInstance();
+                // Re-register with new track so tick logic knows the new duration
+                var pb = speaker.getPlayback();
+                if (pb.isPlaying() && pb.resourceId() != null) {
+                    long dur = ServerSpeakerManager.getDurationMs(pb.resourceId());
+                    mgr.registerSpeaker(serverLevel.dimension(), packet.pos, pb, dur);
+                } else {
+                    mgr.unregisterSpeaker(serverLevel.dimension(), packet.pos);
+                }
             }
         });
     }

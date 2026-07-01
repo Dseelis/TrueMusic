@@ -93,7 +93,7 @@ public class ClothConfigScreen {
             )
             .setDefaultValue(TrueMusicServerConfig.DEFAULT_CHUNK_SIZE)
             .setTooltip(Component.translatable("config.truemusic.transfer.chunkSize.tooltip"))
-            .setSaveConsumer(value -> NeoForgeServerConfig.INSTANCE.chunkSize.set(value))
+            .setSaveConsumer(value -> { if (NeoForgeServerConfig.INSTANCE != null) NeoForgeServerConfig.INSTANCE.chunkSize.set(value); })
             .setTextGetter(value -> Component.literal(formatBytes(value)))
             .build()
         );
@@ -106,7 +106,7 @@ public class ClothConfigScreen {
             )
             .setDefaultValue(TrueMusicServerConfig.DEFAULT_MAX_BYTES_PER_TICK)
             .setTooltip(Component.translatable("config.truemusic.transfer.maxBytesPerTick.tooltip"))
-            .setSaveConsumer(value -> NeoForgeServerConfig.INSTANCE.maxBytesPerTick.set(value))
+            .setSaveConsumer(value -> { if (NeoForgeServerConfig.INSTANCE != null) NeoForgeServerConfig.INSTANCE.maxBytesPerTick.set(value); })
             .setTextGetter(value -> Component.literal(formatBytes(value)))
             .build()
         );
@@ -119,7 +119,7 @@ public class ClothConfigScreen {
             )
             .setDefaultValue(TrueMusicServerConfig.DEFAULT_MAX_BYTES_PER_PLAYER_PER_TICK)
             .setTooltip(Component.translatable("config.truemusic.transfer.maxBytesPerPlayerPerTick.tooltip"))
-            .setSaveConsumer(value -> NeoForgeServerConfig.INSTANCE.maxBytesPerPlayerPerTick.set(value))
+            .setSaveConsumer(value -> { if (NeoForgeServerConfig.INSTANCE != null) NeoForgeServerConfig.INSTANCE.maxBytesPerPlayerPerTick.set(value); })
             .setTextGetter(value -> Component.literal(formatBytes(value)))
             .build()
         );
@@ -137,7 +137,7 @@ public class ClothConfigScreen {
             )
             .setDefaultValue(TrueMusicServerConfig.DEFAULT_DOWNLOAD_CONNECT_TIMEOUT)
             .setTooltip(Component.translatable("config.truemusic.download.connectTimeoutSeconds.tooltip"))
-            .setSaveConsumer(value -> NeoForgeServerConfig.INSTANCE.downloadConnectTimeoutSeconds.set(value))
+            .setSaveConsumer(value -> { if (NeoForgeServerConfig.INSTANCE != null) NeoForgeServerConfig.INSTANCE.downloadConnectTimeoutSeconds.set(value); })
             .setTextGetter(value -> Component.literal(value + "s"))
             .build()
         );
@@ -150,7 +150,7 @@ public class ClothConfigScreen {
             )
             .setDefaultValue(TrueMusicServerConfig.DEFAULT_DOWNLOAD_READ_TIMEOUT)
             .setTooltip(Component.translatable("config.truemusic.download.readTimeoutSeconds.tooltip"))
-            .setSaveConsumer(value -> NeoForgeServerConfig.INSTANCE.downloadReadTimeoutSeconds.set(value))
+            .setSaveConsumer(value -> { if (NeoForgeServerConfig.INSTANCE != null) NeoForgeServerConfig.INSTANCE.downloadReadTimeoutSeconds.set(value); })
             .setTextGetter(value -> Component.literal(value + "s"))
             .build()
         );

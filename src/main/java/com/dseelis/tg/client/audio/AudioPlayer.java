@@ -25,6 +25,13 @@ public class AudioPlayer {
         return instance;
     }
 
+    /** Virtual pos Y used for headphones (player item) audio. */
+    private static final int VIRTUAL_Y = -65535;
+
+    private boolean isVirtualPos(BlockPos pos) {
+        return pos.getY() == VIRTUAL_Y;
+    }
+
     public void play(BlockPos pos, PlaybackState playback, UUID resourceId, float volume) {
         Path cachedAudio = AudioCache.getInstance().getCachedAudio(resourceId).orElse(null);
         if (cachedAudio == null || !Files.exists(cachedAudio)) {
@@ -44,13 +51,14 @@ public class AudioPlayer {
                 stream.seekMs(playbackPosition);
             }
 
-            SpeakerSoundInstance sound = new SpeakerSoundInstance(stream, pos, volume);
+            boolean headphones = isVirtualPos(pos);
+            SpeakerSoundInstance sound = new SpeakerSoundInstance(stream, pos, volume, headphones);
             Minecraft.getInstance().getSoundManager().play(sound);
 
             playingSounds.put(pos, sound);
 
-            TrueMusic.LOGGER.info("Started playing audio {} at {} (seek {}ms)",
-                resourceId, pos, playbackPosition);
+            TrueMusic.LOGGER.info("Started playing audio {} at {} (seek {}ms, headphones={})",
+                resourceId, pos, playbackPosition, headphones);
 
         } catch (Exception e) {
             TrueMusic.LOGGER.error("Failed to play audio at {}", pos, e);
@@ -59,12 +67,11 @@ public class AudioPlayer {
 
     public void playStreaming(BlockPos pos, StreamingAudioStream stream, float volume) {
         stop(pos);
-
-        SpeakerSoundInstance sound = new SpeakerSoundInstance(stream, pos, volume);
+        boolean headphones = isVirtualPos(pos);
+        SpeakerSoundInstance sound = new SpeakerSoundInstance(stream, pos, volume, headphones);
         Minecraft.getInstance().getSoundManager().play(sound);
         playingSounds.put(pos, sound);
-
-        TrueMusic.LOGGER.info("Started streaming audio at {}", pos);
+        TrueMusic.LOGGER.info("Started streaming audio at {} (headphones={})", pos, headphones);
     }
 
     public void stop(BlockPos pos) {

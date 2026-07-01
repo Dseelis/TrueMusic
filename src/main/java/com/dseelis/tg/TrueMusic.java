@@ -5,7 +5,10 @@ import com.dseelis.tg.audio.AudioPersistence;
 import com.dseelis.tg.audio.AudioResource;
 import com.dseelis.tg.block.SpeakerBlock;
 import com.dseelis.tg.block.SpeakerBlockEntity;
+import com.dseelis.tg.item.MusicPlayerItem;
+import com.dseelis.tg.menu.PlayerMenu;
 import com.dseelis.tg.menu.SpeakerMenu;
+import com.dseelis.tg.server.ServerPlayerMusicManager;
 import com.dseelis.tg.command.TrueMusicCommand;
 import com.dseelis.tg.config.NeoForgeClientConfig;
 import com.dseelis.tg.config.NeoForgeServerConfig;
@@ -90,12 +93,22 @@ public static void debugLog(String message, Object... args) {
             new MenuType<>((id, inv) -> new SpeakerMenu(id, inv, BlockPos.ZERO), FeatureFlags.DEFAULT_FLAGS)
         );
 
+    // Music Player item registration
+    public static final DeferredItem<MusicPlayerItem> MUSIC_PLAYER_ITEM =
+        ITEMS.register("player", MusicPlayerItem::new);
+
+    public static final Supplier<MenuType<PlayerMenu>> PLAYER_MENU =
+        MENU_TYPES.register("player", () ->
+            new MenuType<>((id, inv) -> new PlayerMenu(id, inv), FeatureFlags.DEFAULT_FLAGS)
+        );
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MUSIC_TAB = CREATIVE_MODE_TABS.register("music_tab", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.truemusic"))
             .withTabsBefore(CreativeModeTabs.COMBAT)
             .icon(() -> SPEAKER_BLOCK_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
                 output.accept(SPEAKER_BLOCK_ITEM.get());
+                output.accept(MUSIC_PLAYER_ITEM.get());
             }).build());
 
     private long serverTickCount = 0;
@@ -123,6 +136,7 @@ public static void debugLog(String message, Object... args) {
         event.enqueueWork(() -> {
             SpeakerBlockEntity.setTypeSupplier(SPEAKER_BLOCK_ENTITY::get);
             SpeakerMenu.TYPE = SPEAKER_MENU.get();
+            PlayerMenu.TYPE = PLAYER_MENU.get();
         });
         LOGGER.info("TrueMusic Common Setup Initializing");
         AudioManager.getInstance();
@@ -204,6 +218,7 @@ public static void debugLog(String message, Object... args) {
         ServerAudioStorage.getInstance().shutdown();
         AudioTransferManager.getInstance().shutdown();
         ServerSpeakerManager.reset();
+        ServerPlayerMusicManager.reset();
     }
 
     @SubscribeEvent
@@ -221,6 +236,7 @@ public static void debugLog(String message, Object... args) {
         serverTickCount++;
         AudioTransferManager.getInstance().tick(event.getServer());
         ServerSpeakerManager.getInstance().tick(event.getServer(), serverTickCount);
+        ServerPlayerMusicManager.getInstance().tick(event.getServer(), serverTickCount);
     }
 
     private void onConfigLoad(ModConfigEvent event) {

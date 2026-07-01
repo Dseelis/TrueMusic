@@ -14,6 +14,7 @@ import net.minecraft.world.level.Level;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -95,18 +96,22 @@ public class ServerSpeakerManager {
 
         if (!(level.getBlockEntity(key.pos) instanceof SpeakerBlockEntity speaker)) return;
 
-        // Use the speaker's built-in track advancement logic
+        UUID oldResourceId = info.state.resourceId();
         speaker.checkAndAdvanceTrack(System.currentTimeMillis());
 
-        // Sync the new state
-        syncSpeakerState(level, key.pos, speaker);
-
-        // Re-register if still playing
         PlaybackState newState = speaker.getPlayback();
+
         if (newState.isPlaying() && newState.resourceId() != null) {
-            long duration = getDurationMs(newState.resourceId());
-            registerSpeaker(key.dimension, key.pos, newState, duration);
+            if (!newState.resourceId().equals(oldResourceId)) {
+                // Track actually changed — re-register with new anchor and sync
+                long duration = getDurationMs(newState.resourceId());
+                registerSpeaker(key.dimension, key.pos, newState, duration);
+                syncSpeakerState(level, key.pos, speaker);
+            }
+            // else: guard blocked advance — don't re-register with stale state
+            // track will stop naturally on client
         }
+        // stopped: setPlayback already called syncToClients
     }
 
     private void stopSpeaker(MinecraftServer server, SpeakerKey key) {
@@ -119,6 +124,12 @@ public class ServerSpeakerManager {
         syncSpeakerState(level, key.pos, speaker);
 
         TrueMusic.debugLog("Auto-stopped speaker at {} in {}", key.pos, key.dimension.location());
+    }
+
+    public void fireSyncCallback(ServerLevel level, BlockPos pos, SpeakerBlockEntity speaker) {
+        if (syncCallback != null) {
+            syncCallback.onSpeakerSynced(level, pos, speaker);
+        }
     }
 
     private void syncSpeakerState(ServerLevel level, BlockPos pos, SpeakerBlockEntity speaker) {

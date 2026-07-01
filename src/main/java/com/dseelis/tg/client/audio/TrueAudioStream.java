@@ -21,7 +21,7 @@ import java.nio.file.StandardOpenOption;
 // CRITICAL: Always outputs MONO for 3D positioning (SPR compatibility).
 // Stereo files are automatically downmixed.
 
-public class PhononAudioStream implements AudioStream {
+public class TrueAudioStream implements AudioStream {
     private final long decoder;
     private final ByteBuffer fileBuffer;
     private final AudioFormat format;
@@ -31,7 +31,7 @@ public class PhononAudioStream implements AudioStream {
     private int currentSample = 0;
     private boolean closed = false;
 
-    public PhononAudioStream(Path oggFile) throws IOException {
+    public TrueAudioStream(Path oggFile) throws IOException {
         try (FileChannel channel = FileChannel.open(oggFile, StandardOpenOption.READ)) {
             this.fileBuffer = MemoryUtil.memAlloc((int) channel.size());
             channel.read(fileBuffer);

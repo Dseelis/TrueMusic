@@ -30,7 +30,6 @@ public class SpeakerBlock extends Block implements EntityBlock {
             .sound(SoundType.LANTERN)
             .requiresCorrectToolForDrops()
             .noOcclusion()
-            .lightLevel(state -> state.getValue(PLAYING) ? 7 : 0)
         );
         registerDefaultState(stateDefinition.any()
             .setValue(FACING, Direction.NORTH)

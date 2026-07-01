@@ -39,9 +39,9 @@ public class PlaylistManager {
         playlists.clear();
     }
 
-    /**
-     * Create a playlist from all available audio resources.
-     */
+    // Create a playlist from all available audio resources.
+    // Always creates a new playlist instance (use getOrCreatePlaylistFromAllResources
+    // when you need a stable, reusable playlist).
     public Playlist createPlaylistFromAllResources(String name) {
         Playlist playlist = new Playlist(name);
         List<AudioResource> resources = AudioManager.getInstance().getAllResources();
@@ -52,9 +52,17 @@ public class PlaylistManager {
         return playlist;
     }
 
-    /**
-     * Create a playlist from a list of track names.
-     */
+    // Get an existing playlist by name, or create it from all resources if absent.
+    // Reuses the same playlist instance across calls so currentIndex is preserved
+    // and sequential/shuffle advancement works correctly.
+    public Playlist getOrCreatePlaylistFromAllResources(String name) {
+        return playlists.values().stream()
+            .filter(p -> p.getName().equals(name))
+            .findFirst()
+            .orElseGet(() -> createPlaylistFromAllResources(name));
+    }
+
+    // Create a playlist from a list of track names.
     public Playlist createPlaylistFromNames(String playlistName, List<String> trackNames) {
         Playlist playlist = new Playlist(playlistName);
         AudioManager audioManager = AudioManager.getInstance();
