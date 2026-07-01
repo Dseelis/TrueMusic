@@ -9,8 +9,8 @@ import java.util.function.Consumer;
 
 
 public class ProgressSlider extends AbstractWidget {
-    private static final int BAR_HEIGHT = 4;
-    private static final int KNOB_SIZE = 8;
+    private static final int BAR_HEIGHT = 6;
+    private static final int KNOB_SIZE  = 8;
 
     private final Consumer<Float> onSeek;
     private float progress = 0f;
@@ -35,22 +35,35 @@ public class ProgressSlider extends AbstractWidget {
     protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         int barY = getY() + (height - BAR_HEIGHT) / 2;
 
-        graphics.fill(getX(), barY, getX() + width, barY + BAR_HEIGHT, 0x40FFFFFF);
+        // Track background
+        graphics.fill(getX(), barY, getX() + width, barY + BAR_HEIGHT, 0x3000FFFF);
+        // Thin neon border for the track
+        graphics.fill(getX(), barY, getX() + width, barY + 1, 0x6000FFFF);
+        graphics.fill(getX(), barY + BAR_HEIGHT - 1, getX() + width, barY + BAR_HEIGHT, 0x6000FFFF);
 
         if (durationMs > 0) {
             int progressWidth = (int) (width * progress);
-            graphics.fill(getX(), barY, getX() + progressWidth, barY + BAR_HEIGHT, 0xFF40FF40);
+            // Filled portion — cyan
+            graphics.fill(getX(), barY, getX() + progressWidth, barY + BAR_HEIGHT, 0xFF00FFFF);
 
-            int knobX = getX() + progressWidth - KNOB_SIZE / 2;
-            int knobY = getY() + (height - KNOB_SIZE) / 2;
-            graphics.fill(knobX, knobY, knobX + KNOB_SIZE, knobY + KNOB_SIZE,
-                dragging || isHovered ? 0xFFFFFFFF : 0xFFCCCCCC);
+            // Knob — magenta diamond shape
+            int knobCx = getX() + progressWidth;
+            int knobCy = getY() + height / 2;
+            int ks = KNOB_SIZE / 2;
+            boolean hot = dragging || isHovered;
+            int knobColor = hot ? 0xFFFF66FF : 0xFFFF00FF;
+            // Draw diamond: fill four triangles around center
+            for (int dy = -ks; dy <= ks; dy++) {
+                int hw = ks - Math.abs(dy);
+                graphics.fill(knobCx - hw, knobCy + dy, knobCx + hw + 1, knobCy + dy + 1, knobColor);
+            }
         }
 
+        // Time text — cyan
         String timeText = formatTime(positionMs) + " / " + (durationMs > 0 ? formatTime(durationMs) : "--:--");
         int textWidth = net.minecraft.client.Minecraft.getInstance().font.width(timeText);
         graphics.drawString(net.minecraft.client.Minecraft.getInstance().font,
-            timeText, getX() + (width - textWidth) / 2, getY() + height - 8, 0xA0A0A0);
+            timeText, getX() + (width - textWidth) / 2, getY() + height - 8, 0xFF00CCCC);
     }
 
     @Override

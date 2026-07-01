@@ -29,8 +29,9 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     private static final int ITEM_H   = 16;
     private static final int TAB_H    = 16;
     private static final int SEARCH_H = 16;
+    private static final int HEADER_H = 10;
     private static final int CTRL_Y   = TAB_H + GAP;
-    private static final int LIST_Y   = CTRL_Y + SEARCH_H + GAP;
+    private static final int LIST_Y   = CTRL_Y + SEARCH_H + GAP + HEADER_H;
 
     private enum Tab { ALL_TRACKS, FOLDERS }
     private Tab activeTab = Tab.ALL_TRACKS;
@@ -129,24 +130,24 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         addRenderableWidget(volumeSlider);
         ry += BTN_H + GAP + 2;
 
-        int half = (rw - GAP) / 2;
+        // One row of 4 equal transport buttons
+        int btnW4 = (rw - GAP * 3) / 4;
         PlaybackState state = getCurrentState();
 
+        prevButton = Button.builder(Component.literal("⏮"), b -> skipTrack(false))
+            .bounds(rx, ry, btnW4, BTN_H).build();
+        addRenderableWidget(prevButton);
+
         playPauseButton = Button.builder(Component.literal(playLabel(state)), b -> togglePlayPause())
-            .bounds(rx, ry, half, BTN_H).build();
+            .bounds(rx + btnW4 + GAP, ry, btnW4, BTN_H).build();
         addRenderableWidget(playPauseButton);
 
         stopButton = Button.builder(Component.literal("⏹ Stop"), b -> stopPlayback())
-            .bounds(rx + half + GAP, ry, half, BTN_H).build();
+            .bounds(rx + (btnW4 + GAP) * 2, ry, btnW4, BTN_H).build();
         addRenderableWidget(stopButton);
-        ry += BTN_H + GAP;
 
-        prevButton = Button.builder(Component.literal("⏮ Prev"), b -> skipTrack(false))
-            .bounds(rx, ry, half, BTN_H).build();
-        addRenderableWidget(prevButton);
-
-        nextButton = Button.builder(Component.literal("Next ⏭"), b -> skipTrack(true))
-            .bounds(rx + half + GAP, ry, half, BTN_H).build();
+        nextButton = Button.builder(Component.literal("⏭"), b -> skipTrack(true))
+            .bounds(rx + (btnW4 + GAP) * 3, ry, btnW4, BTN_H).build();
         addRenderableWidget(nextButton);
         ry += BTN_H + GAP;
 
@@ -160,8 +161,6 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
             .bounds(rx, ry, rw, BTN_H).build();
         addRenderableWidget(folderFilterButton);
     }
-
-    // ---- Navigation ----
 
     private void switchTab(Tab tab) {
         activeTab    = tab;
@@ -209,8 +208,6 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     private void openFolder(UUID id)  { openFolderId = id;   refreshContent(); }
     private void exitFolder()         { openFolderId = null; refreshContent(); }
 
-    // ---- Folder management ----
-
     private void promptCreateFolder() {
         minecraft.setScreen(new FolderNameDialog(this, "", name -> {
             if (!name.isBlank()) {
@@ -236,8 +233,6 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         FolderManager.getInstance().removeTrackFromFolder(openFolderId, track.id());
         refreshContent();
     }
-
-    // ---- Playback ----
 
     private void onTrackSelected(AudioResource track)     { selectedTrack = track; playPauseButton.active = true; }
     private void onTrackDoubleClicked(AudioResource track) { selectedTrack = track; playTrack(track); }
@@ -310,8 +305,6 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         PlatformHelper.INSTANCE.sendToServer(new SpeakerSetPlaylistPacket(menu.getSpeakerPos(), id));
     }
 
-    // ---- Volume / seek ----
-
     private void onVolumeChanged(float v) {
         currentVolume = v;
         ClientSpeakerManager.getInstance().updateVolume(menu.getSpeakerPos(), v);
@@ -331,8 +324,6 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         });
     }
 
-    // ---- Tick ----
-
     @Override
     protected void containerTick() {
         super.containerTick();
@@ -350,37 +341,38 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         playPauseButton.active = state.isPlaying() || state.isPaused() || selectedTrack != null;
         stopButton.active      = !state.isStopped();
 
-        PlayMode mode = ClientSpeakerManager.getInstance().getSpeakerPlayMode(menu.getSpeakerPos());
-        boolean hasPlaylist = mode != PlayMode.SINGLE || activeFilterFolderId != null;
-        prevButton.active = hasPlaylist && !state.isStopped();
-        nextButton.active = hasPlaylist && !state.isStopped();
+        prevButton.active = !state.isStopped();
+        nextButton.active = !state.isStopped();
 
+        PlayMode mode = ClientSpeakerManager.getInstance().getSpeakerPlayMode(menu.getSpeakerPos());
         playModeButton.setMessage(Component.literal(modeLabel(mode)));
         folderFilterButton.setMessage(Component.literal(filterLabel()));
     }
 
-    // ---- Rendering ----
-
     @Override
     protected void renderBg(GuiGraphics g, float partial, int mx, int my) {
-        g.fill(leftPos, topPos, leftPos + W, topPos + H, 0xEE0D1520);
+        // Main background
+        g.fill(leftPos, topPos, leftPos + W, topPos + H, 0xF0050810);
 
-        int bc = 0xFF1E2D3D;
-        g.fill(leftPos,         topPos,         leftPos + W,     topPos + 1,     bc);
-        g.fill(leftPos,         topPos + H - 1, leftPos + W,     topPos + H,     bc);
-        g.fill(leftPos,         topPos,         leftPos + 1,     topPos + H,     bc);
-        g.fill(leftPos + W - 1, topPos,         leftPos + W,     topPos + H,     bc);
+        // Neon cyan border
+        int bc = 0xFF00FFFF;
+        g.fill(leftPos,         topPos,         leftPos + W,     topPos + 2,     bc);
+        g.fill(leftPos,         topPos + H - 2, leftPos + W,     topPos + H,     bc);
+        g.fill(leftPos,         topPos,         leftPos + 2,     topPos + H,     bc);
+        g.fill(leftPos + W - 2, topPos,         leftPos + W,     topPos + H,     bc);
 
+        // Magenta divider (2px)
         int divX = leftPos + LEFT_W + PAD + PAD / 2;
-        g.fill(divX, topPos + PAD, divX + 1, topPos + H - PAD, 0x30FFFFFF);
+        g.fill(divX, topPos + PAD, divX + 2, topPos + H - PAD, 0x80FF00FF);
 
+        // Tab underline — cyan
         int lx   = leftPos + PAD;
         int ty   = topPos  + PAD;
         int tabW = (LEFT_W - GAP) / 2;
         if (activeTab == Tab.ALL_TRACKS) {
-            g.fill(lx, ty + TAB_H, lx + tabW, ty + TAB_H + 2, 0xFF40AAFF);
+            g.fill(lx, ty + TAB_H, lx + tabW, ty + TAB_H + 2, 0xFF00FFFF);
         } else {
-            g.fill(lx + tabW + GAP, ty + TAB_H, lx + LEFT_W, ty + TAB_H + 2, 0xFF40AAFF);
+            g.fill(lx + tabW + GAP, ty + TAB_H, lx + LEFT_W, ty + TAB_H + 2, 0xFF00FFFF);
         }
     }
 
@@ -389,8 +381,8 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         super.render(g, mx, my, partial);
 
         int lx      = leftPos + PAD;
-        int headerY = topPos + PAD + LIST_Y - 2;
-        g.drawString(font, getLeftHeader(), lx, headerY, 0x888888);
+        int headerY = topPos + PAD + LIST_Y - HEADER_H;
+        g.drawString(font, getLeftHeader(), lx, headerY, 0xFF6688BB);
 
         int rx = leftPos + LEFT_W + PAD * 2;
         renderRightPanel(g, rx, topPos + PAD);
@@ -409,35 +401,35 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     }
 
     private void renderRightPanel(GuiGraphics g, int x, int y) {
-        g.drawString(font, "Now Playing", x, y, 0xFFFFFF);
-        y += 12;
+        g.drawString(font, "◈ NOW PLAYING", x, y, 0xFF00FFFF);
+        y += 10;
+        int rw = W - LEFT_W - PAD * 3;
+        g.fill(x, y, x + rw, y + 1, 0x6000FFFF);
+        y += 5;
 
         PlaybackState state = getCurrentState();
-        int rw = W - LEFT_W - PAD * 3;
 
         if (state.isStopped()) {
-            g.drawString(font, "Nothing playing", x, y, 0x555555);
+            g.drawString(font, "Nothing playing", x, y, 0xFF334455);
         } else {
             String name = ClientAudioManager.getInstance().getResource(state.resourceId())
                 .map(AudioResource::name).orElse("Unknown");
             if (font.width(name) > rw) name = font.plainSubstrByWidth(name, rw - 8) + "...";
-            int col = state.isPlaying() ? 0x55FF55 : 0xFFFF55;
+            int col = state.isPlaying() ? 0xFF00FF66 : 0xFFFF6600;
             g.drawString(font, name, x, y, col);
-            if (state.isPaused()) g.drawString(font, "(Paused)", x, y + 10, 0x888888);
+            if (state.isPaused()) g.drawString(font, "(Paused)", x, y + 10, 0xFF445566);
         }
 
         if (activeFilterFolderId != null) {
             String fname = FolderManager.getInstance().getFolder(activeFilterFolderId)
                 .map(TrackFolder::getName).orElse("?");
-            String label = "[" + fname + "]";
-            g.drawString(font, label, x + rw - font.width(label), topPos + H - PAD - BTN_H - 6, 0x55AAFF);
+            String label = "◈ " + fname;
+            g.drawString(font, label, x + rw - font.width(label), topPos + H - PAD - BTN_H - 6, 0xFF00CCFF);
         }
     }
 
     @Override
     protected void renderLabels(GuiGraphics g, int mx, int my) {}
-
-    // ---- Input ----
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
@@ -469,8 +461,6 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
             return getFocused().mouseDragged(mx, my, btn, dx, dy);
         return super.mouseDragged(mx, my, btn, dx, dy);
     }
-
-    // ---- Helpers ----
 
     private PlaybackState getCurrentState() {
         return ClientSpeakerManager.getInstance()

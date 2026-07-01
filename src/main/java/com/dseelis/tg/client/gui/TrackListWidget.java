@@ -28,8 +28,6 @@ public class TrackListWidget extends ObjectSelectionList<TrackListWidget.BaseEnt
         this.defaultOnPlay = onPlay;
     }
 
-    // ---- Population ----
-
     // Normal list — uses the default callbacks set at construction.
     public void updateEntries(List<AudioResource> resources) {
         clearEntries();
@@ -132,11 +130,11 @@ public class TrackListWidget extends ObjectSelectionList<TrackListWidget.BaseEnt
             boolean selected = isSelected();
             if (hovered || selected) {
                 g.fill(left, top, left + width, top + height,
-                    selected ? 0x50FFFFFF : 0x25FFFFFF);
+                    selected ? 0x4000FFFF : 0x20FF00FF);
             }
 
             Minecraft mc = Minecraft.getInstance();
-            int textColor = selected ? 0xFFFFFF : (hovered ? 0xE0E0E0 : 0xAAAAAA);
+            int textColor = selected ? 0xFF00FFFF : (hovered ? 0xFFCCEEFF : 0xFF8899BB);
 
             // Duration label
             String dur = formatDuration(resource.durationMs());
@@ -154,7 +152,7 @@ public class TrackListWidget extends ObjectSelectionList<TrackListWidget.BaseEnt
 
             // Duration (right-aligned, before remove btn)
             int durX = left + width - durW - 4 - removeBudget;
-            g.drawString(mc.font, dur, durX, top + (height - 8) / 2, 0x666666);
+            g.drawString(mc.font, dur, durX, top + (height - 8) / 2, 0xFF336655);
 
             // Remove (x) button
             if (onRemove != null) {
@@ -162,8 +160,8 @@ public class TrackListWidget extends ObjectSelectionList<TrackListWidget.BaseEnt
                 int by = top + (height - BTN_H) / 2;
                 boolean btnHov = mouseX >= bx && mouseX < bx + BTN_W
                     && mouseY >= by && mouseY < by + BTN_H;
-                g.fill(bx, by, bx + BTN_W, by + BTN_H, btnHov ? 0xBBCC3333 : 0x66993333);
-                g.drawString(mc.font, "x", bx + 3, by + 2, 0xFFCCCC);
+                g.fill(bx, by, bx + BTN_W, by + BTN_H, btnHov ? 0xBBFF0055 : 0x66CC0044);
+                g.drawString(mc.font, "✕", bx + 2, by + 2, 0xFFFF6688);
             }
         }
 
@@ -229,18 +227,18 @@ public class TrackListWidget extends ObjectSelectionList<TrackListWidget.BaseEnt
             boolean selected = isSelected();
             if (hovered || selected) {
                 g.fill(left, top, left + width, top + height,
-                    selected ? 0x50FFFFFF : 0x25FFFFFF);
+                    selected ? 0x4000FFFF : 0x20FF00FF);
             }
 
             Minecraft mc = Minecraft.getInstance();
-            int col = selected ? 0xFFFFFF : (hovered ? 0xFFE860 : 0xCCA830);
+            int col = selected ? 0xFF00FFFF : (hovered ? 0xFFFFCC00 : 0xFFFF9900);
 
-            String label = "> " + folder.getName();
+            String label = "◈ " + folder.getName();
             g.drawString(mc.font, label, left + 3, top + (height - 8) / 2, col);
 
-            String count = folder.size() + " tracks >";
+            String count = folder.size() + " ▶";
             int cw = mc.font.width(count);
-            g.drawString(mc.font, count, left + width - cw - 4, top + (height - 8) / 2, 0x888866);
+            g.drawString(mc.font, count, left + width - cw - 4, top + (height - 8) / 2, 0xFF336655);
         }
 
         @Override

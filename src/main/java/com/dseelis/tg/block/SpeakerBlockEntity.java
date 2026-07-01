@@ -143,6 +143,9 @@ public class SpeakerBlockEntity extends BlockEntity {
 
     public void skipToNext() {
         if (level == null || level.isClientSide) return;
+        if (playlistId != null && PlaylistManager.getInstance().getPlaylist(playlistId).isEmpty()) {
+            playlistId = null;
+        }
         if (playlistId == null) {
             Playlist allTracks = PlaylistManager.getInstance().getOrCreatePlaylistFromAllResources("All Tracks");
             if (playback.resourceId() != null) allTracks.seekToTrack(playback.resourceId());
@@ -150,7 +153,6 @@ public class SpeakerBlockEntity extends BlockEntity {
             setChanged();
         }
         getPlaylist().ifPresent(playlist -> {
-            // Always advance sequentially on manual skip, regardless of playMode
             Optional<UUID> next = playlist.getNextTrack(PlayMode.SEQUENTIAL);
             if (next.isPresent()) {
                 long now = System.currentTimeMillis();
@@ -164,6 +166,9 @@ public class SpeakerBlockEntity extends BlockEntity {
 
     public void skipToPrevious() {
         if (level == null || level.isClientSide) return;
+        if (playlistId != null && PlaylistManager.getInstance().getPlaylist(playlistId).isEmpty()) {
+            playlistId = null;
+        }
         if (playlistId == null) {
             Playlist allTracks = PlaylistManager.getInstance().getOrCreatePlaylistFromAllResources("All Tracks");
             if (playback.resourceId() != null) allTracks.seekToTrack(playback.resourceId());

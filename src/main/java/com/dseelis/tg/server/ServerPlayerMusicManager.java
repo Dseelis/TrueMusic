@@ -27,8 +27,6 @@ public class ServerPlayerMusicManager {
 
     public static void reset() { instance = null; }
 
-    // ---- State helpers ----
-
     private PlayerState getOrCreate(UUID uuid) {
         return states.computeIfAbsent(uuid, k -> new PlayerState());
     }
@@ -36,8 +34,6 @@ public class ServerPlayerMusicManager {
     public void remove(UUID uuid) {
         states.remove(uuid);
     }
-
-    // ---- Packet handlers ----
 
     public void handleSeek(ServerPlayer player, long positionMs) {
         PlayerState st = getOrCreate(player.getUUID());
@@ -241,8 +237,6 @@ public class ServerPlayerMusicManager {
         );
     }
 
-    // ---- Sync helpers ----
-
     private void syncToPlayer(ServerPlayer player, PlayerState st) {
         long now = System.currentTimeMillis();
         PacketDistributor.sendToPlayer(player, new SyncPlayerStatePacket(
@@ -285,8 +279,6 @@ public class ServerPlayerMusicManager {
             }
         });
     }
-
-    // ---- Per-player state ----
 
     private static class PlayerState {
         PlaybackState playback = PlaybackState.STOPPED;

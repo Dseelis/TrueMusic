@@ -29,8 +29,9 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
     private static final int ITEM_H   = 16;
     private static final int TAB_H    = 16;
     private static final int SEARCH_H = 16;
+    private static final int HEADER_H = 10;
     private static final int CTRL_Y   = TAB_H + GAP;
-    private static final int LIST_Y   = CTRL_Y + SEARCH_H + GAP;
+    private static final int LIST_Y   = CTRL_Y + SEARCH_H + GAP + HEADER_H;
 
     private enum Tab { ALL_TRACKS, FOLDERS }
     private Tab activeTab = Tab.ALL_TRACKS;
@@ -126,24 +127,24 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
         addRenderableWidget(volumeSlider);
         ry += BTN_H + GAP + 2;
 
-        int half = (rw - GAP) / 2;
+        // One row of 4 equal transport buttons
+        int btnW4 = (rw - GAP * 3) / 4;
         PlaybackState state = ClientPlayerMusicManager.getInstance().getState();
 
+        prevButton = Button.builder(Component.literal("⏮"), b -> skip(false))
+            .bounds(rx, ry, btnW4, BTN_H).build();
+        addRenderableWidget(prevButton);
+
         playPauseButton = Button.builder(Component.literal(playLabel(state)), b -> togglePlayPause())
-            .bounds(rx, ry, half, BTN_H).build();
+            .bounds(rx + btnW4 + GAP, ry, btnW4, BTN_H).build();
         addRenderableWidget(playPauseButton);
 
         stopButton = Button.builder(Component.literal("⏹ Stop"), b -> stopPlayback())
-            .bounds(rx + half + GAP, ry, half, BTN_H).build();
+            .bounds(rx + (btnW4 + GAP) * 2, ry, btnW4, BTN_H).build();
         addRenderableWidget(stopButton);
-        ry += BTN_H + GAP;
 
-        prevButton = Button.builder(Component.literal("⏮ Prev"), b -> skip(false))
-            .bounds(rx, ry, half, BTN_H).build();
-        addRenderableWidget(prevButton);
-
-        nextButton = Button.builder(Component.literal("Next ⏭"), b -> skip(true))
-            .bounds(rx + half + GAP, ry, half, BTN_H).build();
+        nextButton = Button.builder(Component.literal("⏭"), b -> skip(true))
+            .bounds(rx + (btnW4 + GAP) * 3, ry, btnW4, BTN_H).build();
         addRenderableWidget(nextButton);
         ry += BTN_H + GAP;
 
@@ -158,8 +159,6 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
             .bounds(rx, ry, rw, BTN_H).build();
         addRenderableWidget(broadcastButton);
     }
-
-    // ---- Navigation ----
 
     private void switchTab(Tab tab) {
         activeTab    = tab;
@@ -207,8 +206,6 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
     private void openFolder(UUID id)  { openFolderId = id;   refreshContent(); }
     private void exitFolder()         { openFolderId = null; refreshContent(); }
 
-    // ---- Folder management ----
-
     private void promptCreateFolder() {
         minecraft.setScreen(new FolderNameDialog(this, "", name -> {
             if (!name.isBlank()) {
@@ -231,8 +228,6 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
         FolderManager.getInstance().removeTrackFromFolder(openFolderId, track.id());
         refreshContent();
     }
-
-    // ---- Playback ----
 
     private void onTrackSelected(AudioResource t)      { selectedTrack = t; playPauseButton.active = true; }
     private void onTrackDoubleClicked(AudioResource t)  { selectedTrack = t; playTrack(t); }
@@ -288,8 +283,6 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
         });
     }
 
-    // ---- Tick ----
-
     @Override
     protected void containerTick() {
         super.containerTick();
@@ -314,28 +307,26 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
         broadcastButton.setMessage(Component.literal(broadcastLabel(bc)));
     }
 
-    // ---- Rendering ----
-
     @Override
     protected void renderBg(GuiGraphics g, float partial, int mx, int my) {
-        g.fill(leftPos, topPos, leftPos + W, topPos + H, 0xEE0D1520);
+        g.fill(leftPos, topPos, leftPos + W, topPos + H, 0xF0050810);
 
-        int bc = 0xFF1E2D3D;
-        g.fill(leftPos,         topPos,         leftPos + W,     topPos + 1,     bc);
-        g.fill(leftPos,         topPos + H - 1, leftPos + W,     topPos + H,     bc);
-        g.fill(leftPos,         topPos,         leftPos + 1,     topPos + H,     bc);
-        g.fill(leftPos + W - 1, topPos,         leftPos + W,     topPos + H,     bc);
+        int bc = 0xFF00FFFF;
+        g.fill(leftPos,         topPos,         leftPos + W,     topPos + 2,     bc);
+        g.fill(leftPos,         topPos + H - 2, leftPos + W,     topPos + H,     bc);
+        g.fill(leftPos,         topPos,         leftPos + 2,     topPos + H,     bc);
+        g.fill(leftPos + W - 2, topPos,         leftPos + W,     topPos + H,     bc);
 
         int divX = leftPos + LEFT_W + PAD + PAD / 2;
-        g.fill(divX, topPos + PAD, divX + 1, topPos + H - PAD, 0x30FFFFFF);
+        g.fill(divX, topPos + PAD, divX + 2, topPos + H - PAD, 0x80FF00FF);
 
         int lx   = leftPos + PAD;
         int ty   = topPos  + PAD;
         int tabW = (LEFT_W - GAP) / 2;
         if (activeTab == Tab.ALL_TRACKS) {
-            g.fill(lx, ty + TAB_H, lx + tabW, ty + TAB_H + 2, 0xFF40AAFF);
+            g.fill(lx, ty + TAB_H, lx + tabW, ty + TAB_H + 2, 0xFF00FFFF);
         } else {
-            g.fill(lx + tabW + GAP, ty + TAB_H, lx + LEFT_W, ty + TAB_H + 2, 0xFF40AAFF);
+            g.fill(lx + tabW + GAP, ty + TAB_H, lx + LEFT_W, ty + TAB_H + 2, 0xFF00FFFF);
         }
     }
 
@@ -344,8 +335,8 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
         super.render(g, mx, my, partial);
 
         int lx      = leftPos + PAD;
-        int headerY = topPos + PAD + LIST_Y - 2;
-        g.drawString(font, getLeftHeader(), lx, headerY, 0x888888);
+        int headerY = topPos + PAD + LIST_Y - HEADER_H;
+        g.drawString(font, getLeftHeader(), lx, headerY, 0xFF6688BB);
 
         int rx = leftPos + LEFT_W + PAD * 2;
         renderRightPanel(g, rx, topPos + PAD);
@@ -365,21 +356,23 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
 
     private void renderRightPanel(GuiGraphics g, int x, int y) {
         boolean bc = ClientPlayerMusicManager.getInstance().isBroadcasting();
-        g.drawString(font, bc ? "Broadcasting" : "Now Playing", x, y, bc ? 0xFF8855 : 0xFFFFFF);
-        y += 12;
+        g.drawString(font, bc ? "◈ BROADCASTING" : "◈ NOW PLAYING", x, y, bc ? 0xFFFF6600 : 0xFF00FFFF);
+        y += 10;
+        int rw = W - LEFT_W - PAD * 3;
+        g.fill(x, y, x + rw, y + 1, 0x6000FFFF);
+        y += 5;
 
         PlaybackState s = ClientPlayerMusicManager.getInstance().getState();
-        int rw = W - LEFT_W - PAD * 3;
 
         if (s.isStopped()) {
-            g.drawString(font, "Nothing playing", x, y, 0x555555);
+            g.drawString(font, "Nothing playing", x, y, 0xFF334455);
         } else {
             String name = ClientAudioManager.getInstance().getResource(s.resourceId())
                 .map(AudioResource::name).orElse("Unknown");
             if (font.width(name) > rw) name = font.plainSubstrByWidth(name, rw - 8) + "...";
-            int col = s.isPlaying() ? (bc ? 0xFF8855 : 0x55FF55) : 0xFFFF55;
+            int col = s.isPlaying() ? (bc ? 0xFFFF6600 : 0xFF00FF66) : 0xFFFF6600;
             g.drawString(font, name, x, y, col);
-            if (s.isPaused()) g.drawString(font, "(Paused)", x, y + 10, 0x888888);
+            if (s.isPaused()) g.drawString(font, "(Paused)", x, y + 10, 0xFF445566);
         }
     }
 
@@ -416,8 +409,6 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
             return getFocused().mouseDragged(mx, my, btn, dx, dy);
         return super.mouseDragged(mx, my, btn, dx, dy);
     }
-
-    // ---- Helpers ----
 
     private String playLabel(PlaybackState s)  { return s.isPlaying() ? "Pause" : "Play"; }
     private String modeLabel(PlayMode m) { return "Mode: " + m.getDisplayName(); }

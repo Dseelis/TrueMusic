@@ -31,8 +31,6 @@ public class ClientPlayerMusicManager {
         return instance;
     }
 
-    // ---- State accessors ----
-
     public PlaybackState getState() { return state; }
     public float getVolume() { return volume; }
     public PlayMode getPlayMode() { return playMode; }
@@ -45,8 +43,6 @@ public class ClientPlayerMusicManager {
     }
     public void setPlayMode(PlayMode m) { this.playMode = m; }
     public void setBroadcasting(boolean b) { this.broadcasting = b; }
-
-    // ---- Playback ----
 
     public void playStreaming(StreamingAudioStream stream) {
         stopLocal();

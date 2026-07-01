@@ -27,8 +27,6 @@ public class FolderManager {
         return instance;
     }
 
-    // ---- CRUD ----
-
     public TrackFolder createFolder(String name) {
         TrackFolder folder = new TrackFolder(name);
         folders.add(folder);
@@ -82,8 +80,6 @@ public class FolderManager {
             return result;
         }).orElse(Collections.emptyList());
     }
-
-    // ---- Persistence ----
 
     private Path getSavePath() {
         Minecraft mc = Minecraft.getInstance();

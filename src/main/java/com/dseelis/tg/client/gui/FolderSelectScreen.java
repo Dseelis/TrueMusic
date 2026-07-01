@@ -121,16 +121,18 @@ public class FolderSelectScreen extends Screen {
         int y = (height - H) / 2;
 
         // Dialog background
-        graphics.fill(x, y, x + W, y + H, 0xF0101820);
-        // Border
-        int borderColor = 0xFF1E2D3D;
-        graphics.fill(x, y, x + W, y + 1, borderColor);
-        graphics.fill(x, y + H - 1, x + W, y + H, borderColor);
-        graphics.fill(x, y, x + 1, y + H, borderColor);
-        graphics.fill(x + W - 1, y, x + W, y + H, borderColor);
+        graphics.fill(x, y, x + W, y + H, 0xF0050810);
+        // Neon cyan border (2px)
+        int borderColor = 0xFF00FFFF;
+        graphics.fill(x, y, x + W, y + 2, borderColor);
+        graphics.fill(x, y + H - 2, x + W, y + H, borderColor);
+        graphics.fill(x, y, x + 2, y + H, borderColor);
+        graphics.fill(x + W - 2, y, x + W, y + H, borderColor);
 
         // Title background
-        graphics.fill(x, y + PAD, x + W, y + PAD + TITLE_H, 0xFF1A2A3A);
+        graphics.fill(x, y + PAD, x + W, y + PAD + TITLE_H, 0xFF050F1A);
+        // Title underline
+        graphics.fill(x, y + PAD + TITLE_H - 1, x + W, y + PAD + TITLE_H, 0xFF00FFFF);
 
         super.render(graphics, mouseX, mouseY, partialTick);
     }
