@@ -49,6 +49,7 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
     private Button nextButton;
     private Button playModeButton;
     private Button broadcastButton;
+    private Button duckButton;
     private Button newFolderButton;
     private Button backButton;
     private Button deleteFolderButton;
@@ -158,6 +159,12 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
         broadcastButton = Button.builder(Component.literal(broadcastLabel(bc)), b -> toggleBroadcast())
             .bounds(rx, ry, rw, BTN_H).build();
         addRenderableWidget(broadcastButton);
+        ry += BTN_H + GAP;
+
+        boolean duck = com.dseelis.tg.config.TrueMusicClientConfig.isDuckMinecraftMusic();
+        duckButton = Button.builder(Component.literal(duckLabel(duck)), b -> toggleDuck())
+            .bounds(rx, ry, rw, BTN_H).build();
+        addRenderableWidget(duckButton);
     }
 
     private void switchTab(Tab tab) {
@@ -271,6 +278,18 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
         PlatformHelper.INSTANCE.sendToServer(new PlayerBroadcastPacket(next));
     }
 
+    private void toggleDuck() {
+        boolean cur  = com.dseelis.tg.config.TrueMusicClientConfig.isDuckMinecraftMusic();
+        boolean next = !cur;
+        // Store supplier that returns the new value
+        boolean[] val = { next };
+        com.dseelis.tg.config.TrueMusicClientConfig.setDuckMinecraftMusic(() -> val[0]);
+        duckButton.setMessage(Component.literal(duckLabel(next)));
+        // Apply immediately
+        PlaybackState s = ClientPlayerMusicManager.getInstance().getState();
+        com.dseelis.tg.client.MusicDuckingManager.getInstance().refresh(s.isPlaying());
+    }
+
     private void onVolumeCommit() { /* headphones-only, no server packet */ }
 
     private void onSeek(float progress) {
@@ -305,6 +324,9 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
 
         boolean bc = ClientPlayerMusicManager.getInstance().isBroadcasting();
         broadcastButton.setMessage(Component.literal(broadcastLabel(bc)));
+
+        boolean duck = com.dseelis.tg.config.TrueMusicClientConfig.isDuckMinecraftMusic();
+        duckButton.setMessage(Component.literal(duckLabel(duck)));
     }
 
     @Override
@@ -413,4 +435,5 @@ public class PlayerScreen extends AbstractContainerScreen<PlayerMenu> {
     private String playLabel(PlaybackState s)  { return s.isPlaying() ? "Pause" : "Play"; }
     private String modeLabel(PlayMode m) { return "Mode: " + m.getDisplayName(); }
     private String broadcastLabel(boolean on)  { return on ? "Broadcast: ON" : "Broadcast: OFF"; }
+    private String duckLabel(boolean on)       { return on ? "Duck MC Music: ON" : "Duck MC Music: OFF"; }
 }

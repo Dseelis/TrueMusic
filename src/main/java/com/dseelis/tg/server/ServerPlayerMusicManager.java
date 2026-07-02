@@ -153,10 +153,8 @@ public class ServerPlayerMusicManager {
         // but we'd need the server reference. We handle it in TrueMusic tick.
     }
 
-    /**
-     * Called from TrueMusic server tick with a reference to the server,
-     * so we can advance tracks.
-     */
+// Called from TrueMusic server tick with a reference to the server,
+// so we can advance tracks.
     public void tick(net.minecraft.server.MinecraftServer server, long tickCount) {
         if (tickCount % 20 != 0) return;
         long now = System.currentTimeMillis();
@@ -244,13 +242,15 @@ public class ServerPlayerMusicManager {
         ));
     }
 
-    /**
-     * Send a SyncSpeakerStatePacket to all nearby players using the
-     * personal player's position as the "virtual speaker".
-     * This reuses the existing speaker client-side infrastructure.
-     */
+
+    private static BlockPos virtualPosForPlayer(UUID uuid) {
+        int x = (int) (uuid.getMostSignificantBits() & 0x3FFFFFF);
+        int z = (int) (uuid.getLeastSignificantBits() & 0x3FFFFFF);
+        return new BlockPos(x, -99999, z);
+    }
+
     private void broadcastState(ServerPlayer owner, PlayerState st) {
-        BlockPos virtualPos = owner.blockPosition();
+        BlockPos virtualPos = virtualPosForPlayer(owner.getUUID());
         long now = System.currentTimeMillis();
 
         SyncSpeakerStatePacket packet = new SyncSpeakerStatePacket(
@@ -266,7 +266,7 @@ public class ServerPlayerMusicManager {
     }
 
     private void stopBroadcastForOthers(ServerPlayer owner) {
-        BlockPos virtualPos = owner.blockPosition();
+        BlockPos virtualPos = virtualPosForPlayer(owner.getUUID());
         long now = System.currentTimeMillis();
 
         SyncSpeakerStatePacket stopPacket = new SyncSpeakerStatePacket(

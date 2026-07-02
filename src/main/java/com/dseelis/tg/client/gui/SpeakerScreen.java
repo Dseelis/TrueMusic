@@ -184,9 +184,9 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
 
         if (activeTab == Tab.ALL_TRACKS) {
             String q = searchBox != null ? searchBox.getValue() : "";
-            List<AudioResource> res = q.isEmpty()
+            List<AudioResource> res = new ArrayList<>(q.isEmpty()
                 ? ClientAudioManager.getInstance().getAllResources()
-                : ClientAudioManager.getInstance().searchResources(q);
+                : ClientAudioManager.getInstance().searchResources(q));
             res.sort(Comparator.comparing(AudioResource::name, String.CASE_INSENSITIVE_ORDER));
             trackList.updateEntries(res);
             // Right-click -> open folder selection screen

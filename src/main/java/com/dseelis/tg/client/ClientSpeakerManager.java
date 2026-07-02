@@ -53,6 +53,8 @@ public class ClientSpeakerManager {
             speakers.remove(pos);
             stopAndCleanup(pos, oldState);
         }
+
+        refreshDucking();
     }
 
     public void updateSpeaker(BlockPos pos, PlaybackState playback, float volume) {
@@ -164,6 +166,12 @@ public class ClientSpeakerManager {
         speakerVolumes.remove(pos);
         playModes.remove(pos);
         stopAndCleanup(pos, oldState);
+        refreshDucking();
+    }
+
+    private void refreshDucking() {
+        boolean anyPlaying = speakers.values().stream().anyMatch(PlaybackState::isPlaying);
+        MusicDuckingManager.getInstance().refresh(anyPlaying);
     }
 
     public void clearPendingRequests() {

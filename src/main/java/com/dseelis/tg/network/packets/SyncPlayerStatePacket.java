@@ -10,9 +10,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-/**
- * Server -> Client: sync the player's personal music player state.
- */
 public record SyncPlayerStatePacket(
     PlaybackState playback,
     float volume,
@@ -72,6 +69,13 @@ public record SyncPlayerStatePacket(
             mgr.setVolume(packet.volume());
             mgr.setPlayMode(packet.playMode());
             mgr.setBroadcasting(packet.broadcasting());
+
+            // Apply / remove Minecraft music ducking based on new playback state
+            if (adjusted.isPlaying()) {
+                com.dseelis.tg.client.MusicDuckingManager.getInstance().onPlaybackStarted();
+            } else {
+                com.dseelis.tg.client.MusicDuckingManager.getInstance().onPlaybackStopped();
+            }
 
             // Use a virtual BlockPos derived from the player's UUID for headphones audio.
             // This delegates to the existing ClientSpeakerManager streaming pipeline.
