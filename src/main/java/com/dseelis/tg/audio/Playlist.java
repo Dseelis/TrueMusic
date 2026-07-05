@@ -134,9 +134,11 @@ public class Playlist {
         }
         if (currentIndex > 0) {
             currentIndex--;
-            return Optional.of(trackIds.get(currentIndex));
+        } else {
+            // Wrap around to last track
+            currentIndex = trackIds.size() - 1;
         }
-        return Optional.empty();
+        return Optional.of(trackIds.get(currentIndex));
     }
 
     // Move to a specific track by its UUID.

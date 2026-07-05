@@ -49,6 +49,7 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     private Button nextButton;
     private Button playModeButton;
     private Button folderFilterButton;
+    private Button duckButton;
     private Button newFolderButton;
     private Button backButton;
     private Button deleteFolderButton;
@@ -160,6 +161,12 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         folderFilterButton = Button.builder(Component.literal(filterLabel()), b -> toggleFolderFilter())
             .bounds(rx, ry, rw, BTN_H).build();
         addRenderableWidget(folderFilterButton);
+        ry += BTN_H + GAP;
+
+        boolean duck = com.dseelis.tg.config.TrueMusicClientConfig.isDuckMinecraftMusic();
+        duckButton = Button.builder(Component.literal(duckLabel(duck)), b -> toggleDuck())
+            .bounds(rx, ry, rw, BTN_H).build();
+        addRenderableWidget(duckButton);
     }
 
     private void switchTab(Tab tab) {
@@ -288,6 +295,18 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         folderFilterButton.setMessage(Component.literal(filterLabel()));
     }
 
+    private void toggleDuck() {
+        boolean cur  = com.dseelis.tg.config.TrueMusicClientConfig.isDuckMinecraftMusic();
+        boolean next = !cur;
+        // Store supplier that returns the new value
+        boolean[] val = { next };
+        com.dseelis.tg.config.TrueMusicClientConfig.setDuckMinecraftMusic(() -> val[0]);
+        duckButton.setMessage(Component.literal(duckLabel(next)));
+        // Apply immediately
+        PlaybackState s = getCurrentState();
+        com.dseelis.tg.client.MusicDuckingManager.getInstance().refresh(s.isPlaying());
+    }
+
     private void ensureServerPlaylistForFolder(UUID folderId) {
         FolderManager.getInstance().getFolder(folderId).ifPresent(folder -> {
             String name = "folder:" + folder.getName();
@@ -347,6 +366,9 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
         PlayMode mode = ClientSpeakerManager.getInstance().getSpeakerPlayMode(menu.getSpeakerPos());
         playModeButton.setMessage(Component.literal(modeLabel(mode)));
         folderFilterButton.setMessage(Component.literal(filterLabel()));
+
+        boolean duck = com.dseelis.tg.config.TrueMusicClientConfig.isDuckMinecraftMusic();
+        duckButton.setMessage(Component.literal(duckLabel(duck)));
     }
 
     @Override
@@ -471,6 +493,8 @@ public class SpeakerScreen extends AbstractContainerScreen<SpeakerMenu> {
     private String playLabel(PlaybackState s) { return s.isPlaying() ? "Pause" : "Play"; }
 
     private String modeLabel(PlayMode m) { return "Mode: " + m.getDisplayName(); }
+
+    private String duckLabel(boolean on) { return on ? "Duck MC Music: ON" : "Duck MC Music: OFF"; }
 
     private String filterLabel() {
         if (activeFilterFolderId != null) {

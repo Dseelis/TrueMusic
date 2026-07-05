@@ -153,7 +153,9 @@ public class SpeakerBlockEntity extends BlockEntity {
             setChanged();
         }
         getPlaylist().ifPresent(playlist -> {
-            Optional<UUID> next = playlist.getNextTrack(PlayMode.SEQUENTIAL);
+            // Use SEQUENTIAL for manual skip, ignoring playMode (like next button should work)
+            PlayMode skipMode = playMode == PlayMode.SINGLE ? PlayMode.SEQUENTIAL : playMode;
+            Optional<UUID> next = playlist.getNextTrack(skipMode);
             if (next.isPresent()) {
                 long now = System.currentTimeMillis();
                 lastAdvancedResourceId = null;

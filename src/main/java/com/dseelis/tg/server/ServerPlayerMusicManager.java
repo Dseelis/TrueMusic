@@ -257,9 +257,10 @@ public class ServerPlayerMusicManager {
             virtualPos, st.playback, st.volume, st.playMode, now
         );
 
-        // Send to all players within range (64 blocks)
+        // Send to all players within range (64 blocks), excluding the owner
+        // (owner hears through headphones, others hear via broadcast)
         owner.serverLevel().players().forEach(p -> {
-            if (p.distanceTo(owner) <= 64.0f) {
+            if (!p.getUUID().equals(owner.getUUID()) && p.distanceTo(owner) <= 64.0f) {
                 PacketDistributor.sendToPlayer((ServerPlayer) p, packet);
             }
         });
